@@ -48,16 +48,17 @@ export class AIService {
     async initialize(credentials = null) {
         try {
             if (credentials && typeof window !== 'undefined' && window.AWS) {
-                // Initialize AWS SDK for browser
-                const { BedrockRuntimeClient } = window.AWS;
-                
-                this.client = new BedrockRuntimeClient({
+                // Configure AWS SDK
+                window.AWS.config.update({
                     region: credentials.region || 'us-east-1',
-                    credentials: {
-                        accessKeyId: credentials.accessKeyId,
-                        secretAccessKey: credentials.secretAccessKey,
-                        sessionToken: credentials.sessionToken
-                    }
+                    accessKeyId: credentials.accessKeyId,
+                    secretAccessKey: credentials.secretAccessKey,
+                    sessionToken: credentials.sessionToken
+                });
+                
+                // Initialize Bedrock Runtime client
+                this.client = new window.AWS.BedrockRuntime({
+                    region: credentials.region || 'us-east-1'
                 });
                 
                 this.enabled = true;
@@ -130,7 +131,7 @@ export class AIService {
             }]
         };
         
-        const command = {
+        const params = {
             modelId: this.model,
             contentType: 'application/json',
             accept: 'application/json',
@@ -144,11 +145,11 @@ export class AIService {
         
         // Race between API call and timeout
         const response = await Promise.race([
-            this.client.invokeModel(command),
+            this.client.invokeModel(params).promise(),
             timeoutPromise
         ]);
         
-        const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+        const responseBody = JSON.parse(response.body.toString());
         return this.parseResponse(responseBody);
     }
     

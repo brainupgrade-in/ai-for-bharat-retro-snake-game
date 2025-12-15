@@ -35,7 +35,13 @@ export class Game {
         
         // AI service
         this.aiService = new AIService();
-        this.aiEnabled = this.loadSettings().aiEnabled || false;
+        const settings = this.loadSettings();
+        this.aiEnabled = settings.aiEnabled || false;
+        
+        // Initialize AI with saved credentials if available
+        if (settings.awsCredentials) {
+            this.initializeAI(settings.awsCredentials);
+        }
         
         // Score tracking
         this.score = 0;
@@ -640,7 +646,12 @@ export class Game {
      * @param {Object} credentials - AWS credentials
      */
     async initializeAI(credentials) {
-        await this.aiService.initialize(credentials);
+        try {
+            await this.aiService.initialize(credentials);
+            console.log('AI service initialized with credentials');
+        } catch (error) {
+            console.warn('Failed to initialize AI service:', error);
+        }
     }
     
     /**

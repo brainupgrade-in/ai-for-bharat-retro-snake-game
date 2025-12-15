@@ -73,6 +73,41 @@
         </div>
     </div>
 
+    <!-- AWS Settings Dialog -->
+    <div id="awsDialog" class="overlay hidden">
+        <div class="dialog-window">
+            <div class="title-bar">
+                <div class="title-text">AWS Bedrock Settings</div>
+                <button class="close-button" onclick="closeAWSDialog()">×</button>
+            </div>
+            <div class="dialog-content">
+                <p>Enter your AWS credentials to enable AI features:</p>
+                <div class="form-group">
+                    <label for="awsRegion">Region:</label>
+                    <input type="text" id="awsRegion" value="us-east-1" placeholder="us-east-1">
+                </div>
+                <div class="form-group">
+                    <label for="awsAccessKey">Access Key ID:</label>
+                    <input type="text" id="awsAccessKey" placeholder="Your AWS Access Key">
+                </div>
+                <div class="form-group">
+                    <label for="awsSecretKey">Secret Access Key:</label>
+                    <input type="password" id="awsSecretKey" placeholder="Your AWS Secret Key">
+                </div>
+                <div class="form-group">
+                    <label for="awsSessionToken">Session Token (optional):</label>
+                    <input type="password" id="awsSessionToken" placeholder="Session token for temporary credentials">
+                </div>
+                <div class="dialog-buttons">
+                    <button class="btn" onclick="saveAWSSettings()">Save</button>
+                    <button class="btn" onclick="testAWSConnection()">Test</button>
+                    <button class="btn" onclick="closeAWSDialog()">Cancel</button>
+                </div>
+                <div id="awsStatus" class="status-message"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Dropdown menus -->
     <div id="gameMenu" class="dropdown-menu hidden">
         <div class="menu-option">New Game</div>
@@ -85,6 +120,7 @@
         <div class="menu-option" id="aiToggle">AI Opponent: OFF</div>
         <div class="menu-option" id="aiDifficulty">AI Difficulty: Medium</div>
         <div class="menu-separator"></div>
+        <div class="menu-option" id="awsSettings">AWS Settings</div>
         <div class="menu-option">Sound</div>
         <div class="menu-option">Difficulty</div>
     </div>
@@ -93,6 +129,9 @@
         <div class="menu-option">Instructions</div>
         <div class="menu-option">About</div>
     </div>
+
+    <!-- AWS SDK for Bedrock (optional - for AI features) -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1563.0.min.js"></script>
 
     <script type="module" src="js/main.js"></script>
 </body>

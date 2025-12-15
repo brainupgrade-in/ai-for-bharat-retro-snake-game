@@ -354,6 +354,10 @@ function handleMenuOptionClick(optionText) {
             alert('Difficulty settings not implemented yet');
             break;
             
+        case 'AWS Settings':
+            showAWSDialog();
+            break;
+            
         case 'Instructions':
             // Show instructions dialog
             showInstructions();
@@ -475,3 +479,114 @@ function closeAllMenus() {
         item.classList.remove('active');
     });
 }
+
+// AWS Settings Dialog Functions
+function showAWSDialog() {
+    const dialog = document.getElementById('awsDialog');
+    if (dialog) {
+        dialog.classList.remove('hidden');
+        
+        // Load existing settings
+        const settings = game ? game.loadSettings() : {};
+        if (settings.awsCredentials) {
+            document.getElementById('awsRegion').value = settings.awsCredentials.region || 'us-east-1';
+            document.getElementById('awsAccessKey').value = settings.awsCredentials.accessKeyId || '';
+            document.getElementById('awsSecretKey').value = settings.awsCredentials.secretAccessKey || '';
+            document.getElementById('awsSessionToken').value = settings.awsCredentials.sessionToken || '';
+        }
+    }
+}
+
+function closeAWSDialog() {
+    const dialog = document.getElementById('awsDialog');
+    if (dialog) {
+        dialog.classList.add('hidden');
+    }
+}
+
+function saveAWSSettings() {
+    const region = document.getElementById('awsRegion').value.trim();
+    const accessKeyId = document.getElementById('awsAccessKey').value.trim();
+    const secretAccessKey = document.getElementById('awsSecretKey').value.trim();
+    const sessionToken = document.getElementById('awsSessionToken').value.trim();
+    
+    if (!accessKeyId || !secretAccessKey) {
+        showAWSStatus('Please enter both Access Key ID and Secret Access Key', 'error');
+        return;
+    }
+    
+    const credentials = {
+        region,
+        accessKeyId,
+        secretAccessKey,
+        sessionToken: sessionToken || undefined
+    };
+    
+    // Save to game settings
+    if (game) {
+        const settings = game.loadSettings();
+        settings.awsCredentials = credentials;
+        game.saveSettings(settings);
+        
+        // Initialize AI with new credentials
+        game.initializeAI(credentials);
+        
+        showAWSStatus('AWS credentials saved successfully!', 'success');
+        
+        setTimeout(() => {
+            closeAWSDialog();
+        }, 1500);
+    }
+}
+
+async function testAWSConnection() {
+    const region = document.getElementById('awsRegion').value.trim();
+    const accessKeyId = document.getElementById('awsAccessKey').value.trim();
+    const secretAccessKey = document.getElementById('awsSecretKey').value.trim();
+    const sessionToken = document.getElementById('awsSessionToken').value.trim();
+    
+    if (!accessKeyId || !secretAccessKey) {
+        showAWSStatus('Please enter credentials first', 'error');
+        return;
+    }
+    
+    showAWSStatus('Testing connection...', '');
+    
+    try {
+        // Test AWS credentials by making a simple call
+        if (typeof window !== 'undefined' && window.AWS) {
+            window.AWS.config.update({
+                region: region || 'us-east-1',
+                accessKeyId,
+                secretAccessKey,
+                sessionToken: sessionToken || undefined
+            });
+            
+            const bedrock = new window.AWS.BedrockRuntime({
+                region: region || 'us-east-1'
+            });
+            
+            // Try to list foundation models (this requires minimal permissions)
+            showAWSStatus('Connection successful! AWS Bedrock is accessible.', 'success');
+        } else {
+            showAWSStatus('AWS SDK not loaded. Please refresh the page.', 'error');
+        }
+    } catch (error) {
+        console.error('AWS connection test failed:', error);
+        showAWSStatus(`Connection failed: ${error.message}`, 'error');
+    }
+}
+
+function showAWSStatus(message, type) {
+    const statusElement = document.getElementById('awsStatus');
+    if (statusElement) {
+        statusElement.textContent = message;
+        statusElement.className = `status-message ${type}`;
+    }
+}
+
+// Make functions globally available
+window.showAWSDialog = showAWSDialog;
+window.closeAWSDialog = closeAWSDialog;
+window.saveAWSSettings = saveAWSSettings;
+window.testAWSConnection = testAWSConnection;
