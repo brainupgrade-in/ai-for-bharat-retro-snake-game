@@ -17,6 +17,8 @@ export const CONFIG = {
         BACKGROUND: '#003300',
         SNAKE_BODY: '#00FF00',
         SNAKE_HEAD: '#00CC00',
+        AI_SNAKE_BODY: '#FF6600',
+        AI_SNAKE_HEAD: '#FF3300',
         FOOD: '#FF0000',
         GRID_LINE: '#004400',
         
@@ -69,6 +71,22 @@ export const CONFIG = {
         INITIAL_DIRECTION: 'RIGHT'
     },
     
+    // AI Snake settings
+    AI_SNAKE: {
+        INITIAL_LENGTH: 3,
+        INITIAL_X: 15,
+        INITIAL_Y: 15,
+        INITIAL_DIRECTION: 'LEFT'
+    },
+    
+    // AI settings
+    AI: {
+        ENABLED: false,
+        DIFFICULTY: 'medium',
+        MAX_RESPONSE_TIME: 500,
+        CACHE_DURATION: 150
+    },
+    
     // Storage keys
     STORAGE: {
         HIGH_SCORE: 'snakeHighScore',
@@ -78,8 +96,8 @@ export const CONFIG = {
     // Default settings
     DEFAULT_SETTINGS: {
         aiEnabled: false,
+        aiDifficulty: 'medium',
         commentaryEnabled: false,
-        difficulty: 'MEDIUM',
         soundEnabled: true
     }
 };
@@ -105,5 +123,7 @@ export const COLLISION_TYPES = {
     NONE: 'NONE',
     WALL: 'WALL',
     SELF: 'SELF',
-    FOOD: 'FOOD'
+    FOOD: 'FOOD',
+    AI_SNAKE: 'AI_SNAKE',
+    PLAYER_SNAKE: 'PLAYER_SNAKE'
 };

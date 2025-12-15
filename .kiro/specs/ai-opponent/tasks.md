@@ -3,7 +3,7 @@
 ## Task List
 
 ### AI Service Setup
-- [ ] Create js/ai-service.js with AIService class (US-011)
+- [x] Create js/ai-service.js with AIService class (US-011)
 - [ ] Set up AWS SDK for Bedrock (browser bundle) (US-011)
 - [ ] Implement Bedrock client initialization (US-011)
 - [ ] Create game state serialization for prompt (US-011)
@@ -12,7 +12,7 @@
 - [ ] Implement response parsing and validation (US-011)
 
 ### Fallback System
-- [ ] Create js/ai-pathfinding.js with A* algorithm (US-014)
+- [x] Create js/ai-pathfinding.js with A* algorithm (US-014)
 - [ ] Implement heuristic function (Manhattan distance) (US-014)
 - [ ] Implement path reconstruction (US-014)
 - [ ] Implement getLocalAIMove() fallback method (US-014)
@@ -20,7 +20,7 @@
 - [ ] Implement safe random move when no path found (US-014)
 
 ### AI Snake Integration
-- [ ] Add AI snake to Game class (US-010)
+- [x] Add AI snake to Game class (US-010)
 - [ ] Configure AI snake with distinct color (orange) (US-010)
 - [ ] Integrate AI moves into game loop (US-010)
 - [ ] Handle AI-player collision detection (US-010)

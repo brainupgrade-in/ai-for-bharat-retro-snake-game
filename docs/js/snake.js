@@ -2,23 +2,32 @@
 import { CONFIG, DIRECTION_VECTORS, OPPOSITE_DIRECTIONS } from './config.js';
 
 export class Snake {
-    constructor(startX = CONFIG.SNAKE.INITIAL_X, startY = CONFIG.SNAKE.INITIAL_Y, color = CONFIG.COLORS.SNAKE_BODY) {
+    constructor(
+        startX = CONFIG.SNAKE.INITIAL_X, 
+        startY = CONFIG.SNAKE.INITIAL_Y, 
+        initialDirection = CONFIG.SNAKE.INITIAL_DIRECTION,
+        bodyColor = CONFIG.COLORS.SNAKE_BODY,
+        headColor = CONFIG.COLORS.SNAKE_HEAD
+    ) {
         // Initialize snake body as array of positions
         this.body = [];
+        
+        // Calculate body positions based on initial direction
+        const dirVector = DIRECTION_VECTORS[initialDirection];
         for (let i = 0; i < CONFIG.SNAKE.INITIAL_LENGTH; i++) {
             this.body.push({
-                x: startX - i,
-                y: startY
+                x: startX - (dirVector.x * i),
+                y: startY - (dirVector.y * i)
             });
         }
         
         // Set initial direction
-        this.direction = CONFIG.SNAKE.INITIAL_DIRECTION;
+        this.direction = initialDirection;
         this.nextDirection = this.direction; // Queue for next direction change
         
         // Visual properties
-        this.color = color;
-        this.headColor = CONFIG.COLORS.SNAKE_HEAD;
+        this.color = bodyColor;
+        this.headColor = headColor;
         
         // State
         this.alive = true;

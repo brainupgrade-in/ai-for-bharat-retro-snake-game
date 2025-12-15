@@ -43,6 +43,7 @@ function initializeUI() {
     // Update UI with current game state
     updateScoreDisplay();
     updateGameStateDisplay();
+    updateAIStatusDisplay();
     
     console.log('UI initialized');
 }
@@ -330,6 +331,19 @@ function handleMenuOptionClick(optionText) {
             console.log('Game exited to start screen');
             break;
             
+        case 'AI Opponent: OFF':
+        case 'AI Opponent: ON':
+            // Toggle AI opponent
+            toggleAIOpponent();
+            break;
+            
+        case 'AI Difficulty: Easy':
+        case 'AI Difficulty: Medium':
+        case 'AI Difficulty: Hard':
+            // Cycle AI difficulty
+            cycleAIDifficulty();
+            break;
+            
         case 'Sound':
             // Toggle sound (placeholder - no sound system implemented yet)
             alert('Sound settings not implemented yet');
@@ -395,6 +409,59 @@ Features:
 Created for the AI for Bharat hackathon.`;
 
     alert(about);
+}
+
+function toggleAIOpponent() {
+    if (!game) return;
+    
+    const currentlyEnabled = game.isAIEnabled();
+    const newState = !currentlyEnabled;
+    
+    game.setAIEnabled(newState);
+    updateAIStatusDisplay();
+    
+    console.log(`AI opponent ${newState ? 'enabled' : 'disabled'}`);
+}
+
+function cycleAIDifficulty() {
+    if (!game) return;
+    
+    const difficulties = ['easy', 'medium', 'hard'];
+    const currentDifficulty = game.getAIDifficulty();
+    const currentIndex = difficulties.indexOf(currentDifficulty);
+    const nextIndex = (currentIndex + 1) % difficulties.length;
+    const newDifficulty = difficulties[nextIndex];
+    
+    game.setAIDifficulty(newDifficulty);
+    updateAIStatusDisplay();
+    
+    console.log(`AI difficulty set to: ${newDifficulty}`);
+}
+
+function updateAIStatusDisplay() {
+    if (!game) return;
+    
+    const aiEnabled = game.isAIEnabled();
+    const aiDifficulty = game.getAIDifficulty();
+    
+    // Update menu options
+    const aiToggleElement = document.getElementById('aiToggle');
+    const aiDifficultyElement = document.getElementById('aiDifficulty');
+    
+    if (aiToggleElement) {
+        aiToggleElement.textContent = `AI Opponent: ${aiEnabled ? 'ON' : 'OFF'}`;
+    }
+    
+    if (aiDifficultyElement) {
+        const difficultyCapitalized = aiDifficulty.charAt(0).toUpperCase() + aiDifficulty.slice(1);
+        aiDifficultyElement.textContent = `AI Difficulty: ${difficultyCapitalized}`;
+    }
+    
+    // Update status bar
+    const aiStatusElement = document.getElementById('aiStatus');
+    if (aiStatusElement) {
+        aiStatusElement.textContent = `AI: ${aiEnabled ? 'ON' : 'OFF'}`;
+    }
 }
 
 function closeAllMenus() {

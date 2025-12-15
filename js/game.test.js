@@ -52,7 +52,7 @@ describe('Game Property Tests', () => {
                     game.food.setPosition(head.x, head.y);
                     
                     // Trigger food collision handling
-                    game.handleFoodCollision();
+                    game.handlePlayerFoodCollision();
                 }
                 
                 const finalScore = game.getScore();
@@ -83,7 +83,7 @@ describe('Game Property Tests', () => {
                 game.playerSnake.body[0] = wallPosition;
                 
                 // Check collision
-                const collision = game.checkCollisions();
+                const collision = game.checkPlayerCollisions();
                 
                 // Should detect wall collision
                 return collision === COLLISION_TYPES.WALL;
