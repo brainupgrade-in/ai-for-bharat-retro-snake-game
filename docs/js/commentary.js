@@ -114,7 +114,12 @@ export class CommentaryManager {
      * @param {Object} eventData - Event data
      */
     async triggerEvent(eventType, eventData = {}) {
-        if (!this.enabled) return;
+        console.log(`Commentary triggerEvent called: ${eventType}, enabled: ${this.enabled}`);
+        
+        if (!this.enabled) {
+            console.log('Commentary disabled, skipping event');
+            return;
+        }
         
         const now = Date.now();
         const eventConfig = this.eventTypes[eventType];
@@ -133,10 +138,17 @@ export class CommentaryManager {
         }
         
         this.lastCommentTime = now;
+        console.log(`Generating commentary for ${eventType}`);
         
         try {
-            const comment = await this.generateCommentary(eventType, eventData);
-            this.displayCommentary(comment);
+            // For now, always use fallback comments to ensure they work
+            console.log('Using fallback comment for immediate display');
+            const fallback = this.getFallbackComment(eventType);
+            this.displayCommentary(fallback);
+            
+            // Uncomment below for AI-generated commentary when Bedrock is configured
+            // const comment = await this.generateCommentary(eventType, eventData);
+            // this.displayCommentary(comment);
         } catch (error) {
             console.warn('Commentary generation failed, using fallback:', error);
             const fallback = this.getFallbackComment(eventType);
@@ -273,14 +285,19 @@ Reply with just the commentary text, no quotes or extra formatting.`;
      * @param {string} text - Commentary text to display
      */
     async displayCommentary(text) {
+        console.log(`Displaying commentary: "${text}"`);
+        
         const box = document.getElementById('commentary-box');
         if (!box) {
             console.warn('Commentary box not found');
             return;
         }
         
-        // Clear any existing content
+        console.log('Commentary box found, displaying text');
+        
+        // Clear any existing content and show the box
         box.textContent = '';
+        box.classList.remove('hidden');
         box.style.display = 'block';
         
         // Typing effect
@@ -302,7 +319,7 @@ Reply with just the commentary text, no quotes or extra formatting.`;
         const box = document.getElementById('commentary-box');
         if (box) {
             box.textContent = '';
-            box.style.display = 'none';
+            box.classList.add('hidden');
         }
     }
     

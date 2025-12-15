@@ -8,11 +8,15 @@
 
 body {
     margin: 0;
-    padding: 20px;
+    padding: min(20px, 2vw);
     background: #008080;
     font-family: 'MS Sans Serif', sans-serif;
-    font-size: 11px;
-    overflow: hidden;
+    font-size: clamp(10px, 2.5vw, 11px);
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Window Frame */
@@ -20,8 +24,10 @@ body {
     background: #C0C0C0;
     border: 2px outset #C0C0C0;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    width: 480px;
+    width: min(95vw, 480px);
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Title Bar */
@@ -58,6 +64,26 @@ body {
     border: 1px inset #C0C0C0;
 }
 
+/* Close button for dialogs */
+.close-button {
+    width: 16px;
+    height: 14px;
+    background: #C0C0C0;
+    border: 1px outset #C0C0C0;
+    font-size: 8px;
+    cursor: pointer;
+    color: #000000;
+    font-weight: bold;
+}
+
+.close-button:hover {
+    background: #D4D0C8;
+}
+
+.close-button:active {
+    border: 1px inset #C0C0C0;
+}
+
 /* Menu Bar */
 .menu-bar {
     background: #C0C0C0;
@@ -85,12 +111,13 @@ body {
 
 /* Window Body */
 .window-body {
-    padding: 8px;
+    padding: clamp(4px, 1vw, 8px);
     background: #C0C0C0;
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
+    flex: 1;
 }
 
 /* Status Bar */
@@ -200,4 +227,406 @@ p {
 
 ::-webkit-scrollbar-corner {
     background: #C0C0C0;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Large Desktop (1200px and up) */
+@media (min-width: 1200px) {
+    body {
+        padding: 40px;
+    }
+
+    .window {
+        width: 520px;
+    }
+
+    .dialog-window {
+        width: 450px;
+        max-width: 80vw;
+    }
+}
+
+/* Desktop (992px to 1199px) */
+@media (max-width: 1199px) and (min-width: 992px) {
+    body {
+        padding: 30px;
+    }
+
+    .window {
+        width: 480px;
+    }
+
+    .dialog-window {
+        width: 420px;
+        max-width: 85vw;
+    }
+}
+
+/* Tablet Landscape (768px to 991px) */
+@media (max-width: 991px) and (min-width: 768px) {
+    body {
+        padding: 20px;
+        font-size: 12px;
+    }
+
+    .window {
+        width: 100%;
+        max-width: 600px;
+    }
+
+    .title-bar-text {
+        font-size: 12px;
+    }
+
+    .menu-item {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .dialog-window {
+        width: 90vw;
+        max-width: 500px;
+    }
+
+    .dialog-content {
+        padding: 20px;
+    }
+
+    .btn {
+        padding: 6px 16px;
+        font-size: 12px;
+    }
+
+    .status-field {
+        font-size: 12px;
+        padding: 4px 6px;
+    }
+}
+
+/* Tablet Portrait (600px to 767px) */
+@media (max-width: 767px) and (min-width: 600px) {
+    body {
+        padding: 15px;
+        font-size: 13px;
+    }
+
+    .window {
+        width: 100%;
+        max-width: none;
+    }
+
+    .title-bar {
+        padding: 4px;
+    }
+
+    .title-bar-text {
+        font-size: 13px;
+        padding: 4px 6px;
+    }
+
+    .title-bar-controls button {
+        width: 20px;
+        height: 18px;
+        font-size: 10px;
+    }
+
+    .menu-bar {
+        flex-wrap: wrap;
+    }
+
+    .menu-item {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .dialog-window {
+        width: 95vw;
+        max-width: none;
+        margin: 10px;
+    }
+
+    .dialog-content {
+        padding: 16px;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        font-size: 13px;
+        min-width: 80px;
+    }
+
+    .dialog-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .dialog-buttons .btn {
+        width: 100%;
+    }
+
+    .status-bar {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .status-field {
+        font-size: 13px;
+        padding: 4px 8px;
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .close-button {
+        width: 20px;
+        height: 18px;
+        font-size: 10px;
+    }
+}
+
+/* Mobile Landscape (480px to 599px) */
+@media (max-width: 599px) and (min-width: 480px) {
+    body {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .window {
+        width: 100%;
+        border: 1px outset #C0C0C0;
+    }
+
+    .title-bar {
+        padding: 6px;
+    }
+
+    .title-bar-text {
+        font-size: 14px;
+        padding: 4px 8px;
+    }
+
+    .title-bar-controls {
+        gap: 4px;
+    }
+
+    .title-bar-controls button {
+        width: 24px;
+        height: 20px;
+        font-size: 12px;
+    }
+
+    .menu-item {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    .dialog-window {
+        width: 98vw;
+        max-width: none;
+        margin: 5px;
+        top: 5%;
+        transform: translate(-50%, 0);
+    }
+
+    .dialog-content {
+        padding: 20px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        min-width: 100px;
+    }
+
+    .dialog-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .dialog-buttons .btn {
+        width: 100%;
+    }
+
+    .status-bar {
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .status-field {
+        font-size: 14px;
+        padding: 6px 10px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .close-button {
+        width: 24px;
+        height: 20px;
+        font-size: 12px;
+    }
+
+    /* Form elements */
+    .form-group input,
+    .form-group select {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    .form-group label {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+}
+
+/* Mobile Portrait (320px to 479px) */
+@media (max-width: 479px) {
+    body {
+        padding: 5px;
+        font-size: 16px;
+        overflow-x: hidden;
+    }
+
+    .window {
+        width: 100%;
+        border: 1px outset #C0C0C0;
+        box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .title-bar {
+        padding: 8px;
+    }
+
+    .title-bar-text {
+        font-size: 16px;
+        padding: 4px 8px;
+    }
+
+    .title-bar-controls {
+        gap: 6px;
+    }
+
+    .title-bar-controls button {
+        width: 28px;
+        height: 24px;
+        font-size: 14px;
+    }
+
+    .menu-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .menu-item {
+        padding: 12px 24px;
+        font-size: 16px;
+        text-align: center;
+        border-bottom: 1px solid #808080;
+    }
+
+    .menu-item:last-child {
+        border-bottom: none;
+    }
+
+    .dialog-window {
+        width: 100vw;
+        height: 100vh;
+        max-width: none;
+        max-height: none;
+        margin: 0;
+        top: 0;
+        left: 0;
+        transform: none;
+        border-radius: 0;
+    }
+
+    .dialog-content {
+        padding: 20px;
+        height: calc(100vh - 100px);
+        overflow-y: auto;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        font-size: 16px;
+        min-width: 120px;
+        min-height: 44px;
+    }
+
+    .dialog-buttons {
+        flex-direction: column;
+        gap: 12px;
+        padding: 20px;
+        position: sticky;
+        bottom: 0;
+        background: #C0C0C0;
+        border-top: 1px solid #808080;
+    }
+
+    .dialog-buttons .btn {
+        width: 100%;
+    }
+
+    .status-bar {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .status-field {
+        font-size: 16px;
+        padding: 8px 12px;
+        width: 100%;
+        text-align: center;
+        border-bottom: 1px solid #808080;
+    }
+
+    .status-field:last-child {
+        border-bottom: none;
+    }
+
+    .close-button {
+        width: 28px;
+        height: 24px;
+        font-size: 14px;
+    }
+
+    /* Form elements */
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-group input,
+    .form-group select {
+        font-size: 16px;
+        padding: 12px;
+        min-height: 44px;
+    }
+
+    .form-group label {
+        font-size: 16px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    /* Dropdown menus */
+    .dropdown-menu {
+        position: fixed !important;
+        top: 60px !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        z-index: 1000;
+    }
+
+    .menu-option {
+        padding: 16px 24px;
+        font-size: 16px;
+        border-bottom: 1px solid #808080;
+    }
+
+    .menu-option:last-child {
+        border-bottom: none;
+    }
 }

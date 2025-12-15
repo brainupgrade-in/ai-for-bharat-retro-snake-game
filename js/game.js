@@ -5,6 +5,7 @@ import { Food } from './food.js';
 import { AIService } from './ai-service.js';
 import { CommentaryManager } from './commentary.js';
 import { DifficultyManager } from './difficulty.js';
+import { SoundManager } from './sounds.js';
 
 export class Game {
     constructor(canvas) {
@@ -42,8 +43,17 @@ export class Game {
         
         // Commentary manager
         this.commentaryManager = new CommentaryManager(this.aiService);
-        this.commentaryEnabled = settings.commentaryEnabled || false;
+        this.commentaryEnabled = settings.commentaryEnabled !== undefined ? settings.commentaryEnabled : true;
         this.commentaryManager.setEnabled(this.commentaryEnabled);
+        
+        // Sound manager
+        this.soundManager = new SoundManager();
+        this.soundEnabled = settings.soundEnabled !== undefined ? settings.soundEnabled : true;
+        this.soundManager.setEnabled(this.soundEnabled);
+        
+        // Load sound volume from settings
+        const savedVolume = settings.soundVolume !== undefined ? settings.soundVolume : 0.5;
+        this.soundManager.setVolume(savedVolume);
         
         // Difficulty manager
         this.difficultyManager = new DifficultyManager();
@@ -85,6 +95,10 @@ export class Game {
             this.lastUpdate = performance.now();
             this.gameStartTime = performance.now();
             this.gameLoop();
+            
+            // Play start sound
+            this.soundManager.playSound('start');
+            
             console.log('Game started');
         }
     }
@@ -95,6 +109,10 @@ export class Game {
     pause() {
         if (this.state === CONFIG.STATES.PLAYING) {
             this.state = CONFIG.STATES.PAUSED;
+            
+            // Play pause sound
+            this.soundManager.playSound('pause');
+            
             console.log('Game paused');
         }
     }
@@ -106,6 +124,10 @@ export class Game {
         if (this.state === CONFIG.STATES.PAUSED) {
             this.state = CONFIG.STATES.PLAYING;
             this.lastUpdate = performance.now(); // Reset timing
+            
+            // Play resume sound
+            this.soundManager.playSound('resume');
+            
             console.log('Game resumed');
         }
     }
@@ -453,6 +475,9 @@ export class Game {
         // Increase score
         this.score++;
         
+        // Play eat sound
+        this.soundManager.playSound('eat');
+        
         // Spawn new food
         this.spawnFood();
         
@@ -467,6 +492,9 @@ export class Game {
         
         // Check for score milestone (every 5 points)
         if (this.score % 5 === 0) {
+            // Play milestone sound
+            this.soundManager.playSound('milestone');
+            
             this.commentaryManager.triggerEvent('SCORE_MILESTONE', {
                 playerScore: this.score,
                 aiScore: this.aiEnabled ? this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH : 0
@@ -482,6 +510,9 @@ export class Game {
     handleAIFoodCollision() {
         // Grow AI snake
         this.aiSnake.grow();
+        
+        // Play eat sound (slightly different pitch for AI)
+        this.soundManager.playSound('eat');
         
         // Spawn new food
         this.spawnFood();
@@ -501,6 +532,15 @@ export class Game {
     handlePlayerGameOver() {
         this.state = CONFIG.STATES.GAME_OVER;
         this.isRunning = false;
+        
+        // Play appropriate sound based on outcome
+        if (this.aiEnabled && this.aiSnake.alive) {
+            // AI won
+            this.soundManager.playSound('lose');
+        } else {
+            // Player died but no AI opponent
+            this.soundManager.playSound('die');
+        }
         
         // Record game result for difficulty adjustment
         const survivalTime = performance.now() - this.gameStartTime;
@@ -537,6 +577,9 @@ export class Game {
     handleAIGameOver() {
         this.aiSnake.alive = false;
         
+        // Play win sound
+        this.soundManager.playSound('win');
+        
         // If this was the final outcome (no more AI), record as player win
         if (!this.aiSnake.alive) {
             const survivalTime = performance.now() - this.gameStartTime;
@@ -565,6 +608,9 @@ export class Game {
     handleDrawGame() {
         this.state = CONFIG.STATES.GAME_OVER;
         this.isRunning = false;
+        
+        // Play draw sound (combination of die sounds)
+        this.soundManager.playSound('die');
         
         // Record draw game (neither won)
         const survivalTime = performance.now() - this.gameStartTime;
@@ -901,5 +947,57 @@ export class Game {
      */
     getDifficultyManager() {
         return this.difficultyManager;
+    }
+    
+    /**
+     * Enable/disable sound
+     * @param {boolean} enabled - Whether to enable sound
+     */
+    setSoundEnabled(enabled) {
+        this.soundEnabled = enabled;
+        this.soundManager.setEnabled(enabled);
+        
+        // Save setting
+        const settings = this.loadSettings();
+        settings.soundEnabled = enabled;
+        this.saveSettings(settings);
+        
+        console.log(`Sound ${enabled ? 'enabled' : 'disabled'}`);
+    }
+    
+    /**
+     * Check if sound is enabled
+     * @returns {boolean} True if sound is enabled
+     */
+    isSoundEnabled() {
+        return this.soundEnabled;
+    }
+    
+    /**
+     * Set sound volume
+     * @param {number} volume - Volume level (0.0 to 1.0)
+     */
+    setSoundVolume(volume) {
+        this.soundManager.setVolume(volume);
+        
+        // Save setting
+        const settings = this.loadSettings();
+        settings.soundVolume = volume;
+        this.saveSettings(settings);
+    }
+    
+    /**
+     * Get sound volume
+     * @returns {number} Current volume (0.0 to 1.0)
+     */
+    getSoundVolume() {
+        return this.soundManager.getVolume();
+    }
+    
+    /**
+     * Test sound system
+     */
+    testSound() {
+        this.soundManager.testSound();
     }
 }

@@ -44,6 +44,8 @@ function initializeUI() {
     updateScoreDisplay();
     updateGameStateDisplay();
     updateAIStatusDisplay();
+    updateSoundStatusDisplay();
+    updateDifficultyDisplay();
     
     console.log('UI initialized');
 }
@@ -55,9 +57,18 @@ function setupEventListeners() {
     // Menu event listeners
     setupMenuListeners();
     
+    // Sound volume control
+    setupSoundVolumeControl();
+    
+    // Mobile touch controls
+    setupMobileControls();
+    
     // Window focus/blur for auto-pause
     window.addEventListener('blur', handleWindowBlur);
     window.addEventListener('focus', handleWindowFocus);
+    
+    // Window resize for responsive adjustments
+    window.addEventListener('resize', handleWindowResize);
     
     console.log('Event listeners set up');
 }
@@ -107,10 +118,27 @@ function handleKeyPress(event) {
             }
             break;
             
-        // P or Escape to pause/resume
+        // P to pause/resume
         case CONFIG.KEYS.KEY_P:
         case CONFIG.KEYS.KEY_P_UPPER:
+            if (currentState === CONFIG.STATES.PLAYING) {
+                game.pause();
+                updateGameStateDisplay();
+            } else if (currentState === CONFIG.STATES.PAUSED) {
+                game.resume();
+                updateGameStateDisplay();
+            }
+            break;
+            
+        // Escape to close dialogs or pause/resume
         case CONFIG.KEYS.ESCAPE:
+            // First check if any dialogs are open and close them
+            if (closeAnyOpenDialog()) {
+                // Dialog was closed, don't handle game pause
+                break;
+            }
+            
+            // No dialogs open, handle game pause/resume
             if (currentState === CONFIG.STATES.PLAYING) {
                 game.pause();
                 updateGameStateDisplay();
@@ -149,12 +177,26 @@ function handleWindowFocus() {
     console.log('Window focused - press P to resume if needed');
 }
 
+function handleWindowResize() {
+    // Close any open menus on resize to prevent positioning issues
+    closeAllMenus();
+    
+    // Remove any quick volume controls
+    const existingControl = document.getElementById('quickVolumeControl');
+    if (existingControl) {
+        existingControl.remove();
+    }
+    
+    console.log('Window resized - menus closed for repositioning');
+}
+
 function setupUIUpdateLoop() {
     // Update UI elements periodically
     setInterval(() => {
         if (game) {
             updateScoreDisplay();
             updateGameStateDisplay();
+            updateSoundStatusDisplay();
         }
     }, 100); // Update UI 10 times per second
 }
@@ -286,14 +328,46 @@ function handleMenuClick(menuType, clickedMenuItem) {
 function positionMenu(menuElement, menuItem) {
     // Get the menu item's position relative to the document
     const rect = menuItem.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
     
-    // Position the dropdown menu directly under the menu item
-    menuElement.style.position = 'absolute';
-    menuElement.style.left = `${rect.left}px`;
-    menuElement.style.top = `${rect.bottom}px`;
-    menuElement.style.zIndex = '1000';
+    // For mobile devices (less than 480px), use full-width positioning
+    if (viewportWidth < 480) {
+        menuElement.style.position = 'fixed';
+        menuElement.style.left = '0';
+        menuElement.style.right = '0';
+        menuElement.style.top = `${rect.bottom}px`;
+        menuElement.style.width = '100%';
+        menuElement.style.maxWidth = 'none';
+        menuElement.style.zIndex = '1000';
+    } else {
+        // Desktop/tablet positioning
+        menuElement.style.position = 'absolute';
+        
+        // Check if menu would go off-screen horizontally
+        const menuWidth = menuElement.offsetWidth || 200; // Estimate if not rendered
+        let leftPos = rect.left;
+        
+        if (leftPos + menuWidth > viewportWidth) {
+            leftPos = viewportWidth - menuWidth - 10;
+        }
+        
+        // Check if menu would go off-screen vertically
+        const menuHeight = menuElement.offsetHeight || 150; // Estimate if not rendered
+        let topPos = rect.bottom;
+        
+        if (topPos + menuHeight > viewportHeight) {
+            topPos = rect.top - menuHeight;
+        }
+        
+        menuElement.style.left = `${Math.max(0, leftPos)}px`;
+        menuElement.style.top = `${Math.max(0, topPos)}px`;
+        menuElement.style.width = 'auto';
+        menuElement.style.maxWidth = '300px';
+        menuElement.style.zIndex = '1000';
+    }
     
-    console.log('Positioned menu at:', rect.left, rect.bottom);
+    console.log('Positioned menu at:', menuElement.style.left, menuElement.style.top);
 }
 
 function handleMenuOptionClick(optionText) {
@@ -350,14 +424,22 @@ function handleMenuOptionClick(optionText) {
             toggleCommentary();
             break;
             
-        case 'Sound':
-            // Toggle sound (placeholder - no sound system implemented yet)
-            alert('Sound settings not implemented yet');
+        case 'Difficulty: Easy':
+        case 'Difficulty: Medium':
+        case 'Difficulty: Hard':
+        case 'Difficulty: Adaptive':
+            // Cycle difficulty
+            cycleDifficulty();
             break;
             
-        case 'Difficulty':
-            // Show difficulty options (placeholder)
-            alert('Difficulty settings not implemented yet');
+        case 'Sound':
+            // Show sound settings dialog
+            showSoundDialog();
+            break;
+            
+        case 'Statistics':
+            // Show statistics dialog
+            showStatisticsDialog();
             break;
             
         case 'AWS Settings':
@@ -381,44 +463,33 @@ function handleMenuOptionClick(optionText) {
 }
 
 function showInstructions() {
-    const instructions = `Snake Game Instructions:
+    const dialog = document.getElementById('instructionsDialog');
+    if (dialog) {
+        dialog.classList.remove('hidden');
+        dialog.focus();
+    }
+}
 
-🎮 Controls:
-• Arrow Keys - Move the snake
-• SPACE - Start the game
-• P or ESC - Pause/Resume
-• R - Restart after game over
-
-🎯 Objective:
-• Eat the red food to grow your snake
-• Avoid hitting walls or your own body
-• Try to achieve the highest score!
-
-🏆 Scoring:
-• Each food item = 1 point
-• Game speed increases as you grow
-• High scores are saved automatically`;
-
-    alert(instructions);
+function closeInstructionsDialog() {
+    const dialog = document.getElementById('instructionsDialog');
+    if (dialog) {
+        dialog.classList.add('hidden');
+    }
 }
 
 function showAbout() {
-    const about = `🐍 Snake Game - Windows 95 Style
+    const dialog = document.getElementById('aboutDialog');
+    if (dialog) {
+        dialog.classList.remove('hidden');
+        dialog.focus();
+    }
+}
 
-Version: 1.0
-Built with: Vanilla JavaScript, HTML5 Canvas, CSS3
-
-A nostalgic recreation of the classic Snake game with authentic Windows 95 styling.
-
-Features:
-• Retro Windows 95 UI
-• Smooth gameplay at 60 FPS
-• High score persistence
-• Responsive controls
-
-Created for the AI for Bharat hackathon.`;
-
-    alert(about);
+function closeAboutDialog() {
+    const dialog = document.getElementById('aboutDialog');
+    if (dialog) {
+        dialog.classList.add('hidden');
+    }
 }
 
 function toggleAIOpponent() {
@@ -480,6 +551,236 @@ function updateAIStatusDisplay() {
     }
 }
 
+function updateSoundStatusDisplay() {
+    if (!game) return;
+    
+    const soundEnabled = game.isSoundEnabled();
+    const soundVolume = game.getSoundVolume();
+    const soundToggle = document.getElementById('soundToggle');
+    const soundIcon = document.getElementById('soundIcon');
+    const soundStatus = document.getElementById('soundStatus');
+    const volumeLevel = document.getElementById('volumeLevel');
+    
+    if (soundToggle && soundIcon && soundStatus && volumeLevel) {
+        if (soundEnabled) {
+            soundIcon.textContent = '🔊';
+            soundStatus.textContent = 'ON';
+            soundToggle.classList.remove('disabled');
+            soundToggle.title = 'Click to disable sound | Right-click to adjust volume';
+            
+            // Update volume bar height (0-100%)
+            volumeLevel.style.height = `${soundVolume * 100}%`;
+        } else {
+            soundIcon.textContent = '🔇';
+            soundStatus.textContent = 'OFF';
+            soundToggle.classList.add('disabled');
+            soundToggle.title = 'Click to enable sound';
+            
+            // Show muted volume bar
+            volumeLevel.style.height = '0%';
+        }
+    }
+}
+
+function toggleSoundFromIcon() {
+    if (!game) return;
+    
+    const currentlyEnabled = game.isSoundEnabled();
+    const newState = !currentlyEnabled;
+    
+    game.setSoundEnabled(newState);
+    updateSoundStatusDisplay();
+    
+    console.log(`Sound ${newState ? 'enabled' : 'disabled'} from icon`);
+}
+
+function setupSoundVolumeControl() {
+    const soundToggle = document.getElementById('soundToggle');
+    if (!soundToggle) return;
+    
+    // Right-click to show volume slider
+    soundToggle.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+        showQuickVolumeControl(event);
+    });
+    
+    // Scroll wheel to adjust volume
+    soundToggle.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        if (!game || !game.isSoundEnabled()) return;
+        
+        const currentVolume = game.getSoundVolume();
+        const delta = event.deltaY > 0 ? -0.1 : 0.1;
+        const newVolume = Math.max(0, Math.min(1, currentVolume + delta));
+        
+        game.setSoundVolume(newVolume);
+        updateSoundStatusDisplay();
+        
+        // Play test sound to hear volume change
+        game.testSound();
+    });
+}
+
+function closeAnyOpenDialog() {
+    // List of all dialog IDs that can be closed with ESC
+    const dialogIds = [
+        'statisticsDialog',
+        'awsDialog', 
+        'soundDialog',
+        'instructionsDialog',
+        'aboutDialog'
+    ];
+    
+    // Check each dialog and close the first one that's open
+    for (const dialogId of dialogIds) {
+        const dialog = document.getElementById(dialogId);
+        if (dialog && !dialog.classList.contains('hidden')) {
+            dialog.classList.add('hidden');
+            console.log(`Closed dialog: ${dialogId}`);
+            return true; // Dialog was closed
+        }
+    }
+    
+    // Also check for quick volume control
+    const quickVolumeControl = document.getElementById('quickVolumeControl');
+    if (quickVolumeControl) {
+        quickVolumeControl.remove();
+        console.log('Closed quick volume control');
+        return true;
+    }
+    
+    return false; // No dialogs were open
+}
+
+function setupMobileControls() {
+    const upBtn = document.getElementById('upBtn');
+    const downBtn = document.getElementById('downBtn');
+    const leftBtn = document.getElementById('leftBtn');
+    const rightBtn = document.getElementById('rightBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    
+    if (!upBtn || !downBtn || !leftBtn || !rightBtn || !pauseBtn) return;
+    
+    // Direction controls
+    upBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (game && game.getState() === CONFIG.STATES.PLAYING) {
+            game.setDirection(CONFIG.DIRECTIONS.UP);
+        }
+    });
+    
+    downBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (game && game.getState() === CONFIG.STATES.PLAYING) {
+            game.setDirection(CONFIG.DIRECTIONS.DOWN);
+        }
+    });
+    
+    leftBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (game && game.getState() === CONFIG.STATES.PLAYING) {
+            game.setDirection(CONFIG.DIRECTIONS.LEFT);
+        }
+    });
+    
+    rightBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (game && game.getState() === CONFIG.STATES.PLAYING) {
+            game.setDirection(CONFIG.DIRECTIONS.RIGHT);
+        }
+    });
+    
+    // Pause/Resume control
+    pauseBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (!game) return;
+        
+        const currentState = game.getState();
+        if (currentState === CONFIG.STATES.PLAYING) {
+            game.pause();
+            pauseBtn.textContent = '▶';
+            updateGameStateDisplay();
+        } else if (currentState === CONFIG.STATES.PAUSED) {
+            game.resume();
+            pauseBtn.textContent = '⏸';
+            updateGameStateDisplay();
+        } else if (currentState === CONFIG.STATES.START) {
+            game.start();
+            pauseBtn.textContent = '⏸';
+            updateGameStateDisplay();
+        }
+    });
+    
+    // Also add click events for non-touch devices
+    [upBtn, downBtn, leftBtn, rightBtn, pauseBtn].forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Trigger the same logic as touchstart
+            const touchEvent = new TouchEvent('touchstart', {
+                bubbles: true,
+                cancelable: true
+            });
+            btn.dispatchEvent(touchEvent);
+        });
+    });
+    
+    console.log('Mobile controls set up');
+}
+
+function showQuickVolumeControl(event) {
+    if (!game) return;
+    
+    // Remove any existing quick volume control
+    const existingControl = document.getElementById('quickVolumeControl');
+    if (existingControl) {
+        existingControl.remove();
+    }
+    
+    // Create quick volume control
+    const volumeControl = document.createElement('div');
+    volumeControl.id = 'quickVolumeControl';
+    volumeControl.className = 'quick-volume-control';
+    volumeControl.innerHTML = `
+        <div class="volume-slider-container">
+            <input type="range" id="quickVolumeSlider" min="0" max="100" value="${Math.round(game.getSoundVolume() * 100)}">
+            <span id="quickVolumeDisplay">${Math.round(game.getSoundVolume() * 100)}%</span>
+        </div>
+    `;
+    
+    // Position near the sound toggle
+    volumeControl.style.position = 'absolute';
+    volumeControl.style.left = `${event.pageX - 50}px`;
+    volumeControl.style.top = `${event.pageY - 40}px`;
+    volumeControl.style.zIndex = '1000';
+    
+    document.body.appendChild(volumeControl);
+    
+    // Set up slider functionality
+    const slider = document.getElementById('quickVolumeSlider');
+    const display = document.getElementById('quickVolumeDisplay');
+    
+    slider.addEventListener('input', () => {
+        const volume = parseInt(slider.value) / 100;
+        game.setSoundVolume(volume);
+        display.textContent = `${slider.value}%`;
+        updateSoundStatusDisplay();
+    });
+    
+    slider.addEventListener('change', () => {
+        // Play test sound when user finishes adjusting
+        game.testSound();
+    });
+    
+    // Remove control when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', function removeVolumeControl(e) {
+            if (!volumeControl.contains(e.target)) {
+                volumeControl.remove();
+                document.removeEventListener('click', removeVolumeControl);
+            }
+        });
+    }, 100);
+}
+
 function toggleCommentary() {
     if (!game) return;
     
@@ -490,6 +791,66 @@ function toggleCommentary() {
     updateAIStatusDisplay();
     
     console.log(`Commentary ${newState ? 'enabled' : 'disabled'}`);
+}
+
+function cycleDifficulty() {
+    if (!game) return;
+    
+    const difficulties = ['EASY', 'MEDIUM', 'HARD', 'ADAPTIVE'];
+    const currentDifficulty = game.getDifficulty();
+    const currentIndex = difficulties.indexOf(currentDifficulty);
+    const nextIndex = (currentIndex + 1) % difficulties.length;
+    const newDifficulty = difficulties[nextIndex];
+    
+    game.setDifficulty(newDifficulty);
+    updateDifficultyDisplay();
+    
+    console.log(`Difficulty set to: ${newDifficulty}`);
+}
+
+function showStatisticsDialog() {
+    if (!game) return;
+    
+    const difficultyManager = game.getDifficultyManager();
+    const stats = difficultyManager.getFormattedStats();
+    
+    // Update statistics display
+    document.getElementById('statsGamesPlayed').textContent = stats.gamesPlayed;
+    document.getElementById('statsGamesWon').textContent = stats.gamesWon;
+    document.getElementById('statsWinRate').textContent = stats.winRate;
+    document.getElementById('statsHighScore').textContent = stats.highScore;
+    document.getElementById('statsAvgScore').textContent = stats.avgScore;
+    // Streak statistics removed per user request
+    
+    // Update skill level
+    const skillFill = document.getElementById('skillFill');
+    const skillText = document.getElementById('skillText');
+    skillFill.style.width = `${stats.skillLevel}%`;
+    skillText.textContent = `${stats.skillLevel}% - ${stats.skillLabel}`;
+    
+    // Show dialog
+    document.getElementById('statisticsDialog').classList.remove('hidden');
+    
+    // Focus the dialog for better accessibility
+    document.getElementById('statisticsDialog').focus();
+}
+
+function closeStatisticsDialog() {
+    document.getElementById('statisticsDialog').classList.add('hidden');
+}
+
+function resetStatistics() {
+    if (!game) return;
+    
+    if (confirm('Are you sure you want to reset all statistics? This cannot be undone.')) {
+        const difficultyManager = game.getDifficultyManager();
+        difficultyManager.resetStats();
+        
+        // Refresh the display
+        showStatisticsDialog();
+        
+        console.log('Statistics reset');
+    }
 }
 
 function closeAllMenus() {
@@ -518,6 +879,9 @@ function showAWSDialog() {
             document.getElementById('awsSecretKey').value = settings.awsCredentials.secretAccessKey || '';
             document.getElementById('awsSessionToken').value = settings.awsCredentials.sessionToken || '';
         }
+        
+        // Focus the dialog
+        dialog.focus();
     }
 }
 
@@ -614,3 +978,106 @@ window.showAWSDialog = showAWSDialog;
 window.closeAWSDialog = closeAWSDialog;
 window.saveAWSSettings = saveAWSSettings;
 window.testAWSConnection = testAWSConnection;
+function updateDifficultyDisplay() {
+    if (!game) return;
+    
+    const difficulty = game.getDifficulty();
+    const difficultySelector = document.getElementById('difficultySelector');
+    const difficultyStatus = document.getElementById('difficultyStatus');
+    
+    const difficultyCapitalized = difficulty.charAt(0).toUpperCase() + difficulty.slice(1).toLowerCase();
+    
+    if (difficultySelector) {
+        difficultySelector.textContent = `Difficulty: ${difficultyCapitalized}`;
+    }
+    
+    if (difficultyStatus) {
+        difficultyStatus.textContent = `Difficulty: ${difficultyCapitalized}`;
+    }
+}
+
+// Sound Settings Dialog Functions
+function showSoundDialog() {
+    const dialog = document.getElementById('soundDialog');
+    if (dialog) {
+        dialog.classList.remove('hidden');
+        
+        // Load existing settings
+        if (game) {
+            const soundEnabled = game.isSoundEnabled();
+            const soundVolume = game.getSoundVolume();
+            
+            document.getElementById('soundEnabled').checked = soundEnabled;
+            document.getElementById('soundVolume').value = Math.round(soundVolume * 100);
+            document.getElementById('volumeDisplay').textContent = `${Math.round(soundVolume * 100)}%`;
+        }
+        
+        // Focus the dialog
+        dialog.focus();
+    }
+}
+
+function closeSoundDialog() {
+    const dialog = document.getElementById('soundDialog');
+    if (dialog) {
+        dialog.classList.add('hidden');
+    }
+}
+
+function applySoundSettings() {
+    if (!game) return;
+    
+    const soundEnabled = document.getElementById('soundEnabled').checked;
+    const soundVolume = parseInt(document.getElementById('soundVolume').value) / 100;
+    
+    game.setSoundEnabled(soundEnabled);
+    game.setSoundVolume(soundVolume);
+    
+    showSoundStatus('Sound settings applied!', 'success');
+    
+    setTimeout(() => {
+        closeSoundDialog();
+    }, 1000);
+}
+
+function testSoundEffect() {
+    if (game) {
+        game.testSound();
+        showSoundStatus('Test sound played', '');
+    }
+}
+
+function updateVolumeDisplay() {
+    const volumeSlider = document.getElementById('soundVolume');
+    const volumeDisplay = document.getElementById('volumeDisplay');
+    
+    if (volumeSlider && volumeDisplay) {
+        volumeDisplay.textContent = `${volumeSlider.value}%`;
+    }
+}
+
+function showSoundStatus(message, type) {
+    const statusElement = document.getElementById('soundStatus');
+    if (statusElement) {
+        statusElement.textContent = message;
+        statusElement.className = `status-message ${type}`;
+        
+        // Clear status after 3 seconds
+        setTimeout(() => {
+            statusElement.textContent = '';
+            statusElement.className = 'status-message';
+        }, 3000);
+    }
+}
+
+// Make functions globally available
+window.toggleSoundFromIcon = toggleSoundFromIcon;
+window.showSoundDialog = showSoundDialog;
+window.closeSoundDialog = closeSoundDialog;
+window.applySoundSettings = applySoundSettings;
+window.testSoundEffect = testSoundEffect;
+window.updateVolumeDisplay = updateVolumeDisplay;
+window.closeStatisticsDialog = closeStatisticsDialog;
+window.resetStatistics = resetStatistics;
+window.closeInstructionsDialog = closeInstructionsDialog;
+window.closeAboutDialog = closeAboutDialog;

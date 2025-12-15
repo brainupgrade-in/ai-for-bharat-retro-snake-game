@@ -78,7 +78,7 @@ export class AIService {
      * @param {Object} gameState - Current game state
      * @returns {Promise<string>} Direction (UP, DOWN, LEFT, RIGHT)
      */
-    async getAIMove(gameState) {
+    async getAIMove(gameState, difficultyParams = null) {
         // Check if we have a recent cached move (within 150ms)
         const now = performance.now();
         if (this.lastMove && (now - this.lastMoveTime) < 150) {
@@ -104,7 +104,8 @@ export class AIService {
         
         // Apply difficulty-based mistakes
         if (move) {
-            move = this.applyMistake(move, gameState);
+            const mistakeRate = difficultyParams ? difficultyParams.mistakeRate : this.difficultySettings[this.difficulty].mistakeRate;
+            move = this.applyMistake(move, gameState, mistakeRate);
             this.lastMove = move;
             this.lastMoveTime = now;
         }
@@ -341,10 +342,10 @@ Reply with exactly one word: UP, DOWN, LEFT, or RIGHT`;
      * @param {Object} gameState - Game state
      * @returns {string} Final move (possibly with mistake)
      */
-    applyMistake(optimalMove, gameState) {
-        const settings = this.difficultySettings[this.difficulty];
+    applyMistake(optimalMove, gameState, mistakeRate = null) {
+        const actualMistakeRate = mistakeRate !== null ? mistakeRate : this.difficultySettings[this.difficulty].mistakeRate;
         
-        if (Math.random() < settings.mistakeRate) {
+        if (Math.random() < actualMistakeRate) {
             const possibleMoves = this.getPossibleMoves(
                 gameState.aiSnake.body[0], 
                 gameState.aiSnake.direction, 

@@ -61,16 +61,38 @@
         <!-- Commentary Box -->
         <div id="commentary-box" class="commentary-box hidden"></div>
 
+        <!-- Mobile Touch Controls -->
+        <div id="mobileControls" class="mobile-controls">
+            <div class="control-row">
+                <button class="control-btn" id="upBtn">↑</button>
+            </div>
+            <div class="control-row">
+                <button class="control-btn" id="leftBtn">←</button>
+                <button class="control-btn" id="pauseBtn">⏸</button>
+                <button class="control-btn" id="rightBtn">→</button>
+            </div>
+            <div class="control-row">
+                <button class="control-btn" id="downBtn">↓</button>
+            </div>
+        </div>
+
         <div class="status-bar">
             <div class="status-field">Score: <span id="currentScore">0</span></div>
             <div class="status-field">High Score: <span id="highScore">0</span></div>
             <div class="status-field" id="aiStatus">AI: OFF</div>
             <div class="status-field difficulty" id="difficultyStatus">Difficulty: Medium</div>
+            <div class="status-field sound-toggle" id="soundToggle" onclick="toggleSoundFromIcon()"
+                title="Click to toggle sound">
+                <span id="soundIcon">🔊</span> <span id="soundStatus">ON</span>
+                <div class="volume-bar" id="volumeBar">
+                    <div class="volume-level" id="volumeLevel"></div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Statistics Dialog -->
-    <div id="statisticsDialog" class="overlay hidden">
+    <div id="statisticsDialog" class="overlay hidden" tabindex="-1">
         <div class="dialog-window">
             <div class="title-bar">
                 <div class="title-text">Your Statistics</div>
@@ -99,15 +121,7 @@
                         <span class="stat-label">Average Score:</span>
                         <span class="stat-value" id="statsAvgScore">0.0</span>
                     </div>
-                    <div class="stat-separator"></div>
-                    <div class="stat-row">
-                        <span class="stat-label">Current Streak:</span>
-                        <span class="stat-value" id="statsCurrentStreak">0</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Best Streak:</span>
-                        <span class="stat-value" id="statsBestStreak">0</span>
-                    </div>
+
                     <div class="stat-separator"></div>
                     <div class="stat-row">
                         <span class="stat-label">Skill Level:</span>
@@ -128,7 +142,7 @@
     </div>
 
     <!-- AWS Settings Dialog -->
-    <div id="awsDialog" class="overlay hidden">
+    <div id="awsDialog" class="overlay hidden" tabindex="-1">
         <div class="dialog-window">
             <div class="title-bar">
                 <div class="title-text">AWS Bedrock Settings</div>
@@ -158,6 +172,142 @@
                     <button class="btn" onclick="closeAWSDialog()">Cancel</button>
                 </div>
                 <div id="awsStatus" class="status-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sound Settings Dialog -->
+    <div id="soundDialog" class="overlay hidden" tabindex="-1">
+        <div class="dialog-window">
+            <div class="title-bar">
+                <div class="title-text">Sound Settings</div>
+                <button class="close-button" onclick="closeSoundDialog()">×</button>
+            </div>
+            <div class="dialog-content">
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="soundEnabled" checked> Enable Sound Effects
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="soundVolume">Volume:</label>
+                    <input type="range" id="soundVolume" min="0" max="100" value="50" oninput="updateVolumeDisplay()">
+                    <span id="volumeDisplay">50%</span>
+                </div>
+                <div class="form-group">
+                    <button class="btn" onclick="testSoundEffect()">Test Sound</button>
+                </div>
+                <div class="dialog-buttons">
+                    <button class="btn" onclick="applySoundSettings()">Apply</button>
+                    <button class="btn" onclick="closeSoundDialog()">Cancel</button>
+                </div>
+                <div id="soundStatus" class="status-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions Dialog -->
+    <div id="instructionsDialog" class="overlay hidden" tabindex="-1">
+        <div class="dialog-window">
+            <div class="title-bar">
+                <div class="title-text">Snake Game Instructions</div>
+                <button class="close-button" onclick="closeInstructionsDialog()">×</button>
+            </div>
+            <div class="dialog-content">
+                <div class="instructions-content">
+                    <h3>🎮 Controls:</h3>
+                    <ul>
+                        <li><strong>Arrow Keys</strong> - Move the snake</li>
+                        <li><strong>SPACE</strong> - Start the game</li>
+                        <li><strong>P or ESC</strong> - Pause/Resume</li>
+                        <li><strong>R</strong> - Restart after game over</li>
+                    </ul>
+
+                    <h3>🎯 Objective:</h3>
+                    <ul>
+                        <li>Eat the red food to grow your snake</li>
+                        <li>Avoid hitting walls or your own body</li>
+                        <li>Try to achieve the highest score!</li>
+                    </ul>
+
+                    <h3>🏆 Scoring:</h3>
+                    <ul>
+                        <li>Each food item = 1 point</li>
+                        <li>Game speed increases as you grow</li>
+                        <li>High scores are saved automatically</li>
+                    </ul>
+
+                    <h3>🔊 Sound Controls:</h3>
+                    <ul>
+                        <li><strong>Click sound icon</strong> - Toggle sound on/off</li>
+                        <li><strong>Right-click sound icon</strong> - Adjust volume</li>
+                        <li><strong>Scroll on sound icon</strong> - Quick volume adjust</li>
+                    </ul>
+                </div>
+                <div class="dialog-buttons">
+                    <button class="btn" onclick="closeInstructionsDialog()">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Dialog -->
+    <div id="aboutDialog" class="overlay hidden" tabindex="-1">
+        <div class="dialog-window">
+            <div class="title-bar">
+                <div class="title-text">About Snake Game</div>
+                <button class="close-button" onclick="closeAboutDialog()">×</button>
+            </div>
+            <div class="dialog-content">
+                <div class="about-content">
+                    <div class="about-header">
+                        <h2>🐍 Snake Game - Windows 95 Style</h2>
+                        <p><strong>Version:</strong> 1.0</p>
+                    </div>
+
+                    <div class="about-description">
+                        <p>A nostalgic recreation of the classic Snake game with authentic Windows 95 styling and modern
+                            AI-powered enhancements.</p>
+                    </div>
+
+                    <div class="about-tech">
+                        <h3>Built with:</h3>
+                        <ul>
+                            <li>Vanilla JavaScript (ES6+)</li>
+                            <li>HTML5 Canvas API</li>
+                            <li>CSS3 with Win95 aesthetic</li>
+                            <li>Web Audio API for retro sounds</li>
+                            <li>Amazon Bedrock for AI features</li>
+                        </ul>
+                    </div>
+
+                    <div class="about-features">
+                        <h3>Features:</h3>
+                        <ul>
+                            <li>Authentic Windows 95 UI</li>
+                            <li>Smooth 60 FPS gameplay</li>
+                            <li>AI opponent with multiple difficulty levels</li>
+                            <li>Real-time AI commentary</li>
+                            <li>Dynamic difficulty adjustment</li>
+                            <li>Retro 8-bit sound effects</li>
+                            <li>High score persistence</li>
+                        </ul>
+                    </div>
+
+                    <div class="about-author">
+                        <h3>Author:</h3>
+                        <p><strong>Rajesh Gheware</strong></p>
+                        <p><a href="https://linkedin.com/in/rajesh-gheware"
+                                target="_blank">linkedin.com/in/rajesh-gheware</a></p>
+                    </div>
+
+                    <div class="about-project">
+                        <p><em>Created for the AI for Bharat hackathon.</em></p>
+                    </div>
+                </div>
+                <div class="dialog-buttons">
+                    <button class="btn" onclick="closeAboutDialog()">OK</button>
+                </div>
             </div>
         </div>
     </div>

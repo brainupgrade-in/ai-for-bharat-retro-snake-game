@@ -4,6 +4,8 @@ import { Snake } from './snake.js';
 import { Food } from './food.js';
 import { AIService } from './ai-service.js';
 import { CommentaryManager } from './commentary.js';
+import { DifficultyManager } from './difficulty.js';
+import { SoundManager } from './sounds.js';
 
 export class Game {
     constructor(canvas) {
@@ -41,8 +43,22 @@ export class Game {
         
         // Commentary manager
         this.commentaryManager = new CommentaryManager(this.aiService);
-        this.commentaryEnabled = settings.commentaryEnabled || false;
+        this.commentaryEnabled = settings.commentaryEnabled !== undefined ? settings.commentaryEnabled : true;
         this.commentaryManager.setEnabled(this.commentaryEnabled);
+        
+        // Sound manager
+        this.soundManager = new SoundManager();
+        this.soundEnabled = settings.soundEnabled !== undefined ? settings.soundEnabled : true;
+        this.soundManager.setEnabled(this.soundEnabled);
+        
+        // Load sound volume from settings
+        const savedVolume = settings.soundVolume !== undefined ? settings.soundVolume : 0.5;
+        this.soundManager.setVolume(savedVolume);
+        
+        // Difficulty manager
+        this.difficultyManager = new DifficultyManager();
+        const difficulty = settings.difficulty || 'MEDIUM';
+        this.difficultyManager.setMode(difficulty);
         
         // Initialize AI with saved credentials if available
         if (settings.awsCredentials) {
@@ -54,9 +70,10 @@ export class Game {
         this.highScore = this.loadHighScore();
         
         // Game timing
-        this.gameSpeed = CONFIG.INITIAL_SPEED;
+        this.gameSpeed = this.difficultyManager.getGameSpeed();
         this.lastUpdate = 0;
         this.lastRender = 0;
+        this.gameStartTime = 0;
         
         // Game loop control
         this.animationId = null;
@@ -76,7 +93,12 @@ export class Game {
             this.state = CONFIG.STATES.PLAYING;
             this.isRunning = true;
             this.lastUpdate = performance.now();
+            this.gameStartTime = performance.now();
             this.gameLoop();
+            
+            // Play start sound
+            this.soundManager.playSound('start');
+            
             console.log('Game started');
         }
     }
@@ -87,6 +109,10 @@ export class Game {
     pause() {
         if (this.state === CONFIG.STATES.PLAYING) {
             this.state = CONFIG.STATES.PAUSED;
+            
+            // Play pause sound
+            this.soundManager.playSound('pause');
+            
             console.log('Game paused');
         }
     }
@@ -98,6 +124,10 @@ export class Game {
         if (this.state === CONFIG.STATES.PAUSED) {
             this.state = CONFIG.STATES.PLAYING;
             this.lastUpdate = performance.now(); // Reset timing
+            
+            // Play resume sound
+            this.soundManager.playSound('resume');
+            
             console.log('Game resumed');
         }
     }
@@ -124,7 +154,7 @@ export class Game {
         
         // Reset score and timing
         this.score = 0;
-        this.gameSpeed = CONFIG.INITIAL_SPEED;
+        this.gameSpeed = this.difficultyManager.getGameSpeed();
         this.lastUpdate = 0;
         
         console.log('Game reset');
@@ -155,8 +185,15 @@ export class Game {
     async update() {
         if (this.state !== CONFIG.STATES.PLAYING) return;
         
+        // Store previous scores for comeback detection
+        const prevPlayerScore = this.score;
+        const prevAIScore = this.aiEnabled ? this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH : 0;
+        
         // Move the player snake
         this.playerSnake.move();
+        
+        // Check for near miss before moving AI
+        this.checkNearMiss();
         
         // Move the AI snake if enabled
         if (this.aiEnabled && this.aiSnake.alive) {
@@ -188,6 +225,11 @@ export class Game {
         // Check for head-to-head collision
         if (this.aiEnabled && this.checkHeadToHeadCollision()) {
             this.handleDrawGame();
+        }
+        
+        // Check for comeback (lead change)
+        if (this.aiEnabled) {
+            this.checkComeback(prevPlayerScore, prevAIScore);
         }
     }
     
@@ -293,6 +335,82 @@ export class Game {
     }
     
     /**
+     * Check for near miss events and trigger commentary
+     */
+    checkNearMiss() {
+        const head = this.playerSnake.getHead();
+        const directions = [
+            { dx: 0, dy: -1, name: 'wall' },
+            { dx: 0, dy: 1, name: 'wall' },
+            { dx: -1, dy: 0, name: 'wall' },
+            { dx: 1, dy: 0, name: 'wall' }
+        ];
+        
+        for (const dir of directions) {
+            const checkPos = { x: head.x + dir.dx, y: head.y + dir.dy };
+            
+            // Check wall near miss
+            if (checkPos.x < 0 || checkPos.x >= CONFIG.GRID_SIZE || 
+                checkPos.y < 0 || checkPos.y >= CONFIG.GRID_SIZE) {
+                this.commentaryManager.triggerEvent('NEAR_MISS', {
+                    obstacle: 'wall',
+                    playerScore: this.score,
+                    aiScore: this.aiEnabled ? this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH : 0
+                });
+                return;
+            }
+            
+            // Check self collision near miss
+            if (this.playerSnake.body.some(segment => segment.x === checkPos.x && segment.y === checkPos.y)) {
+                this.commentaryManager.triggerEvent('NEAR_MISS', {
+                    obstacle: 'self',
+                    playerScore: this.score,
+                    aiScore: this.aiEnabled ? this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH : 0
+                });
+                return;
+            }
+            
+            // Check AI snake near miss
+            if (this.aiEnabled && this.aiSnake.alive && 
+                this.aiSnake.body.some(segment => segment.x === checkPos.x && segment.y === checkPos.y)) {
+                this.commentaryManager.triggerEvent('NEAR_MISS', {
+                    obstacle: 'AI snake',
+                    playerScore: this.score,
+                    aiScore: this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH
+                });
+                return;
+            }
+        }
+    }
+    
+    /**
+     * Check for comeback events (lead changes)
+     * @param {number} prevPlayerScore - Previous player score
+     * @param {number} prevAIScore - Previous AI score
+     */
+    checkComeback(prevPlayerScore, prevAIScore) {
+        const currentPlayerScore = this.score;
+        const currentAIScore = this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH;
+        
+        // Check if lead changed from AI to player
+        if (prevAIScore > prevPlayerScore && currentPlayerScore > currentAIScore) {
+            this.commentaryManager.triggerEvent('COMEBACK', {
+                playerScore: currentPlayerScore,
+                aiScore: currentAIScore,
+                leader: 'player'
+            });
+        }
+        // Check if lead changed from player to AI
+        else if (prevPlayerScore > prevAIScore && currentAIScore > currentPlayerScore) {
+            this.commentaryManager.triggerEvent('COMEBACK', {
+                playerScore: currentPlayerScore,
+                aiScore: currentAIScore,
+                leader: 'ai'
+            });
+        }
+    }
+    
+    /**
      * Check for head-to-head collision
      * @returns {boolean} True if heads collide
      */
@@ -324,8 +442,13 @@ export class Game {
                 gridSize: CONFIG.GRID_SIZE
             };
             
-            // Get AI move decision
-            const aiMove = await this.aiService.getAIMove(gameState);
+            // Get AI move decision with difficulty parameters
+            const difficultyParams = {
+                aggression: this.difficultyManager.getAIAggression(),
+                mistakeRate: this.difficultyManager.getAIMistakeRate()
+            };
+            
+            const aiMove = await this.aiService.getAIMove(gameState, difficultyParams);
             
             if (aiMove) {
                 // Set AI snake direction
@@ -352,13 +475,14 @@ export class Game {
         // Increase score
         this.score++;
         
+        // Play eat sound
+        this.soundManager.playSound('eat');
+        
         // Spawn new food
         this.spawnFood();
         
-        // Increase game speed slightly
-        if (this.gameSpeed > CONFIG.MIN_SPEED) {
-            this.gameSpeed = Math.max(CONFIG.MIN_SPEED, this.gameSpeed - CONFIG.SPEED_INCREMENT);
-        }
+        // Update game speed from difficulty manager
+        this.gameSpeed = this.difficultyManager.getGameSpeed();
         
         // Trigger commentary
         this.commentaryManager.triggerEvent('PLAYER_EAT', {
@@ -368,6 +492,9 @@ export class Game {
         
         // Check for score milestone (every 5 points)
         if (this.score % 5 === 0) {
+            // Play milestone sound
+            this.soundManager.playSound('milestone');
+            
             this.commentaryManager.triggerEvent('SCORE_MILESTONE', {
                 playerScore: this.score,
                 aiScore: this.aiEnabled ? this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH : 0
@@ -383,6 +510,9 @@ export class Game {
     handleAIFoodCollision() {
         // Grow AI snake
         this.aiSnake.grow();
+        
+        // Play eat sound (slightly different pitch for AI)
+        this.soundManager.playSound('eat');
         
         // Spawn new food
         this.spawnFood();
@@ -402,6 +532,26 @@ export class Game {
     handlePlayerGameOver() {
         this.state = CONFIG.STATES.GAME_OVER;
         this.isRunning = false;
+        
+        // Play appropriate sound based on outcome
+        if (this.aiEnabled && this.aiSnake.alive) {
+            // AI won
+            this.soundManager.playSound('lose');
+        } else {
+            // Player died but no AI opponent
+            this.soundManager.playSound('die');
+        }
+        
+        // Record game result for difficulty adjustment
+        const survivalTime = performance.now() - this.gameStartTime;
+        const aiScore = this.aiEnabled ? this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH : 0;
+        
+        this.difficultyManager.recordGame({
+            won: false,
+            score: this.score,
+            survivalTime: Math.round(survivalTime),
+            aiScore: aiScore
+        });
         
         // Update high score if necessary
         if (this.score > this.highScore) {
@@ -427,6 +577,22 @@ export class Game {
     handleAIGameOver() {
         this.aiSnake.alive = false;
         
+        // Play win sound
+        this.soundManager.playSound('win');
+        
+        // If this was the final outcome (no more AI), record as player win
+        if (!this.aiSnake.alive) {
+            const survivalTime = performance.now() - this.gameStartTime;
+            const aiScore = this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH;
+            
+            this.difficultyManager.recordGame({
+                won: true,
+                score: this.score,
+                survivalTime: Math.round(survivalTime),
+                aiScore: aiScore
+            });
+        }
+        
         // Trigger player win commentary
         this.commentaryManager.triggerEvent('PLAYER_WIN', {
             playerScore: this.score,
@@ -442,6 +608,20 @@ export class Game {
     handleDrawGame() {
         this.state = CONFIG.STATES.GAME_OVER;
         this.isRunning = false;
+        
+        // Play draw sound (combination of die sounds)
+        this.soundManager.playSound('die');
+        
+        // Record draw game (neither won)
+        const survivalTime = performance.now() - this.gameStartTime;
+        const aiScore = this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH;
+        
+        this.difficultyManager.recordGame({
+            won: false, // Draw counts as no win for difficulty purposes
+            score: this.score,
+            survivalTime: Math.round(survivalTime),
+            aiScore: aiScore
+        });
         
         // Update high score if necessary
         if (this.score > this.highScore) {
@@ -712,7 +892,7 @@ export class Game {
         }
         console.log('Game destroyed');
     }
-}
+    
     /**
      * Enable/disable commentary
      * @param {boolean} enabled - Whether to enable commentary
@@ -736,3 +916,88 @@ export class Game {
     isCommentaryEnabled() {
         return this.commentaryEnabled;
     }
+    
+    /**
+     * Set difficulty mode
+     * @param {string} mode - Difficulty mode
+     */
+    setDifficulty(mode) {
+        this.difficultyManager.setMode(mode);
+        this.gameSpeed = this.difficultyManager.getGameSpeed();
+        
+        // Save setting
+        const settings = this.loadSettings();
+        settings.difficulty = mode;
+        this.saveSettings(settings);
+        
+        console.log(`Difficulty set to: ${mode}`);
+    }
+    
+    /**
+     * Get current difficulty mode
+     * @returns {string} Current difficulty mode
+     */
+    getDifficulty() {
+        return this.difficultyManager.getMode();
+    }
+    
+    /**
+     * Get difficulty manager instance
+     * @returns {DifficultyManager} Difficulty manager
+     */
+    getDifficultyManager() {
+        return this.difficultyManager;
+    }
+    
+    /**
+     * Enable/disable sound
+     * @param {boolean} enabled - Whether to enable sound
+     */
+    setSoundEnabled(enabled) {
+        this.soundEnabled = enabled;
+        this.soundManager.setEnabled(enabled);
+        
+        // Save setting
+        const settings = this.loadSettings();
+        settings.soundEnabled = enabled;
+        this.saveSettings(settings);
+        
+        console.log(`Sound ${enabled ? 'enabled' : 'disabled'}`);
+    }
+    
+    /**
+     * Check if sound is enabled
+     * @returns {boolean} True if sound is enabled
+     */
+    isSoundEnabled() {
+        return this.soundEnabled;
+    }
+    
+    /**
+     * Set sound volume
+     * @param {number} volume - Volume level (0.0 to 1.0)
+     */
+    setSoundVolume(volume) {
+        this.soundManager.setVolume(volume);
+        
+        // Save setting
+        const settings = this.loadSettings();
+        settings.soundVolume = volume;
+        this.saveSettings(settings);
+    }
+    
+    /**
+     * Get sound volume
+     * @returns {number} Current volume (0.0 to 1.0)
+     */
+    getSoundVolume() {
+        return this.soundManager.getVolume();
+    }
+    
+    /**
+     * Test sound system
+     */
+    testSound() {
+        this.soundManager.testSound();
+    }
+}

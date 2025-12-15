@@ -97,7 +97,7 @@ export const CONFIG = {
     DEFAULT_SETTINGS: {
         aiEnabled: false,
         aiDifficulty: 'medium',
-        commentaryEnabled: false,
+        commentaryEnabled: true,
         soundEnabled: true
     }
 };
