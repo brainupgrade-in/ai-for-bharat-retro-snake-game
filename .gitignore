@@ -2,8 +2,7 @@
 node_modules/
 package-lock.json
 
-# Build output
-dist/
+# Build output (keep dist/ for GitHub Pages)
 build/
 .vite/
 
