@@ -155,8 +155,15 @@ export class Game {
     async update() {
         if (this.state !== CONFIG.STATES.PLAYING) return;
         
+        // Store previous scores for comeback detection
+        const prevPlayerScore = this.score;
+        const prevAIScore = this.aiEnabled ? this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH : 0;
+        
         // Move the player snake
         this.playerSnake.move();
+        
+        // Check for near miss before moving AI
+        this.checkNearMiss();
         
         // Move the AI snake if enabled
         if (this.aiEnabled && this.aiSnake.alive) {
@@ -188,6 +195,11 @@ export class Game {
         // Check for head-to-head collision
         if (this.aiEnabled && this.checkHeadToHeadCollision()) {
             this.handleDrawGame();
+        }
+        
+        // Check for comeback (lead change)
+        if (this.aiEnabled) {
+            this.checkComeback(prevPlayerScore, prevAIScore);
         }
     }
     
@@ -290,6 +302,82 @@ export class Game {
      */
     checkSnakeCollision(pos, body) {
         return body.some(segment => segment.x === pos.x && segment.y === pos.y);
+    }
+    
+    /**
+     * Check for near miss events and trigger commentary
+     */
+    checkNearMiss() {
+        const head = this.playerSnake.getHead();
+        const directions = [
+            { dx: 0, dy: -1, name: 'wall' },
+            { dx: 0, dy: 1, name: 'wall' },
+            { dx: -1, dy: 0, name: 'wall' },
+            { dx: 1, dy: 0, name: 'wall' }
+        ];
+        
+        for (const dir of directions) {
+            const checkPos = { x: head.x + dir.dx, y: head.y + dir.dy };
+            
+            // Check wall near miss
+            if (checkPos.x < 0 || checkPos.x >= CONFIG.GRID_SIZE || 
+                checkPos.y < 0 || checkPos.y >= CONFIG.GRID_SIZE) {
+                this.commentaryManager.triggerEvent('NEAR_MISS', {
+                    obstacle: 'wall',
+                    playerScore: this.score,
+                    aiScore: this.aiEnabled ? this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH : 0
+                });
+                return;
+            }
+            
+            // Check self collision near miss
+            if (this.playerSnake.body.some(segment => segment.x === checkPos.x && segment.y === checkPos.y)) {
+                this.commentaryManager.triggerEvent('NEAR_MISS', {
+                    obstacle: 'self',
+                    playerScore: this.score,
+                    aiScore: this.aiEnabled ? this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH : 0
+                });
+                return;
+            }
+            
+            // Check AI snake near miss
+            if (this.aiEnabled && this.aiSnake.alive && 
+                this.aiSnake.body.some(segment => segment.x === checkPos.x && segment.y === checkPos.y)) {
+                this.commentaryManager.triggerEvent('NEAR_MISS', {
+                    obstacle: 'AI snake',
+                    playerScore: this.score,
+                    aiScore: this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH
+                });
+                return;
+            }
+        }
+    }
+    
+    /**
+     * Check for comeback events (lead changes)
+     * @param {number} prevPlayerScore - Previous player score
+     * @param {number} prevAIScore - Previous AI score
+     */
+    checkComeback(prevPlayerScore, prevAIScore) {
+        const currentPlayerScore = this.score;
+        const currentAIScore = this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH;
+        
+        // Check if lead changed from AI to player
+        if (prevAIScore > prevPlayerScore && currentPlayerScore > currentAIScore) {
+            this.commentaryManager.triggerEvent('COMEBACK', {
+                playerScore: currentPlayerScore,
+                aiScore: currentAIScore,
+                leader: 'player'
+            });
+        }
+        // Check if lead changed from player to AI
+        else if (prevPlayerScore > prevAIScore && currentAIScore > currentPlayerScore) {
+            this.commentaryManager.triggerEvent('COMEBACK', {
+                playerScore: currentPlayerScore,
+                aiScore: currentAIScore,
+                leader: 'ai'
+            });
+        }
     }
     
     /**
@@ -712,7 +800,7 @@ export class Game {
         }
         console.log('Game destroyed');
     }
-}
+    
     /**
      * Enable/disable commentary
      * @param {boolean} enabled - Whether to enable commentary
@@ -736,3 +824,4 @@ export class Game {
     isCommentaryEnabled() {
         return this.commentaryEnabled;
     }
+}
