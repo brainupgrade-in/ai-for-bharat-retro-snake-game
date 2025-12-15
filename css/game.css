@@ -1,0 +1,111 @@
+/* Game-specific styles */
+
+#gameCanvas {
+    border: 2px inset #C0C0C0;
+    background: #003300;
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+/* Game Overlays */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(192, 192, 192, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.overlay-content {
+    text-align: center;
+    padding: 20px;
+    background: #C0C0C0;
+    border: 2px outset #C0C0C0;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    min-width: 200px;
+}
+
+.overlay-content h2 {
+    color: #000080;
+    margin-bottom: 16px;
+    font-size: 16px;
+}
+
+.overlay-content p {
+    margin: 8px 0;
+    color: #000000;
+}
+
+.start-prompt,
+.restart-prompt {
+    color: #000080;
+    font-weight: bold;
+    margin-top: 16px;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    50% {
+        opacity: 1;
+    }
+
+    51%,
+    100% {
+        opacity: 0.3;
+    }
+}
+
+/* High Score Notification */
+#newHighScore {
+    color: #FF0000;
+    font-weight: bold;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Game State Indicators */
+.status-field {
+    font-family: 'MS Sans Serif', monospace;
+    font-size: 11px;
+}
+
+/* Menu positioning - will be set dynamically by JavaScript */
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    .window {
+        width: 100%;
+        max-width: 480px;
+    }
+
+    #gameCanvas {
+        width: 100%;
+        height: auto;
+        max-width: 400px;
+        max-height: 400px;
+    }
+}
