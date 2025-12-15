@@ -65,7 +65,7 @@ export class AIService {
                 });
                 
                 this.enabled = true;
-                console.log('AWS credentials stored successfully (Bedrock API calls will use fallback for now)');
+                console.log('AWS credentials configured successfully - Bedrock API ready!');
             } else {
                 console.log('No credentials provided, using fallback AI only');
                 this.enabled = false;
@@ -147,9 +147,9 @@ export class AIService {
             setTimeout(() => reject(new Error('Timeout')), this.timeout);
         });
         
-        // For now, throw an error to use fallback
-        // TODO: Implement direct HTTP calls to Bedrock API
-        throw new Error('Bedrock API not yet implemented with direct HTTP calls');
+        // Make direct HTTP call to Bedrock API
+        const response = await this.callBedrockAPI(requestBody);
+        return this.parseResponse(response);
     }
     
     /**
@@ -415,5 +415,168 @@ Reply with exactly one word: UP, DOWN, LEFT, or RIGHT`;
      */
     isAvailable() {
         return this.enabled || this.fallbackEnabled;
+    }
+
+    /**
+     * Make direct HTTP call to Bedrock API
+     * @param {Object} requestBody - Request payload
+     * @returns {Promise<Object>} API response
+     */
+    async callBedrockAPI(requestBody) {
+        const modelId = 'anthropic.claude-3-haiku-20240307-v1:0';
+        const region = this.credentials.region;
+        const service = 'bedrock';
+        const host = `bedrock-runtime.${region}.amazonaws.com`;
+        const endpoint = `https://${host}/model/${modelId}/invoke`;
+        
+        const body = JSON.stringify(requestBody);
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Host': host
+        };
+        
+        // Sign the request
+        const signedHeaders = await this.signRequest('POST', endpoint, headers, body);
+        
+        // Create timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Bedrock API timeout')), this.timeout);
+        });
+        
+        // Make the HTTP request
+        const fetchPromise = fetch(endpoint, {
+            method: 'POST',
+            headers: signedHeaders,
+            body: body
+        }).then(async (response) => {
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Bedrock API error: ${response.status} ${errorText}`);
+            }
+            return response.json();
+        });
+        
+        // Race between API call and timeout
+        return Promise.race([fetchPromise, timeoutPromise]);
+    }
+
+    /**
+     * Sign AWS request using Signature Version 4
+     * @param {string} method - HTTP method
+     * @param {string} url - Full URL
+     * @param {Object} headers - Request headers
+     * @param {string} body - Request body
+     * @returns {Promise<Object>} Signed headers
+     */
+    async signRequest(method, url, headers, body) {
+        const urlObj = new URL(url);
+        const host = urlObj.host;
+        const pathname = urlObj.pathname;
+        const search = urlObj.search;
+        
+        const region = this.credentials.region;
+        const service = 'bedrock';
+        const accessKeyId = this.credentials.accessKeyId;
+        const secretAccessKey = this.credentials.secretAccessKey;
+        const sessionToken = this.credentials.sessionToken;
+        
+        // Create timestamp
+        const now = new Date();
+        const amzDate = now.toISOString().replace(/[:\-]|\.\d{3}/g, '');
+        const dateStamp = amzDate.substr(0, 8);
+        
+        // Create canonical request
+        const canonicalHeaders = Object.keys(headers)
+            .sort()
+            .map(key => `${key.toLowerCase()}:${headers[key]}`)
+            .join('\n') + '\n';
+        
+        const signedHeaders = Object.keys(headers)
+            .sort()
+            .map(key => key.toLowerCase())
+            .join(';');
+        
+        const payloadHash = await this.sha256(body);
+        
+        const canonicalRequest = [
+            method,
+            pathname,
+            search.slice(1), // Remove leading ?
+            canonicalHeaders,
+            signedHeaders,
+            payloadHash
+        ].join('\n');
+        
+        // Create string to sign
+        const algorithm = 'AWS4-HMAC-SHA256';
+        const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
+        const stringToSign = [
+            algorithm,
+            amzDate,
+            credentialScope,
+            await this.sha256(canonicalRequest)
+        ].join('\n');
+        
+        // Calculate signature
+        const signingKey = await this.getSignatureKey(secretAccessKey, dateStamp, region, service);
+        const signatureBytes = await this.hmacSha256(signingKey, stringToSign);
+        const signature = Array.from(signatureBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        // Create authorization header
+        const authorization = `${algorithm} Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+        
+        // Return signed headers
+        const signedHeadersObj = { ...headers };
+        signedHeadersObj['X-Amz-Date'] = amzDate;
+        signedHeadersObj['Authorization'] = authorization;
+        
+        if (sessionToken) {
+            signedHeadersObj['X-Amz-Security-Token'] = sessionToken;
+        }
+        
+        return signedHeadersObj;
+    }
+
+    /**
+     * Get AWS signature key
+     */
+    async getSignatureKey(key, dateStamp, regionName, serviceName) {
+        const kDate = await this.hmacSha256('AWS4' + key, dateStamp);
+        const kRegion = await this.hmacSha256(kDate, regionName);
+        const kService = await this.hmacSha256(kRegion, serviceName);
+        const kSigning = await this.hmacSha256(kService, 'aws4_request');
+        return kSigning;
+    }
+
+    /**
+     * HMAC SHA256 hash
+     */
+    async hmacSha256(key, data) {
+        const encoder = new TextEncoder();
+        const keyData = typeof key === 'string' ? encoder.encode(key) : key;
+        const dataBuffer = encoder.encode(data);
+        
+        const cryptoKey = await crypto.subtle.importKey(
+            'raw',
+            keyData,
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['sign']
+        );
+        
+        const signature = await crypto.subtle.sign('HMAC', cryptoKey, dataBuffer);
+        return new Uint8Array(signature);
+    }
+
+    /**
+     * SHA256 hash (hex)
+     */
+    async sha256(data) {
+        const encoder = new TextEncoder();
+        const dataBuffer = encoder.encode(data);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 }

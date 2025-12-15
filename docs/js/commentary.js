@@ -142,13 +142,22 @@ export class CommentaryManager {
         
         try {
             // For now, always use fallback comments to ensure they work
-            console.log('Using fallback comment for immediate display');
-            const fallback = this.getFallbackComment(eventType);
-            this.displayCommentary(fallback);
-            
-            // Uncomment below for AI-generated commentary when Bedrock is configured
-            // const comment = await this.generateCommentary(eventType, eventData);
-            // this.displayCommentary(comment);
+            // Try AI-generated commentary first, fallback if it fails
+            try {
+                if (this.aiService && this.aiService.isAvailable()) {
+                    console.log('Generating AI commentary...');
+                    const comment = await this.generateCommentary(eventType, eventData);
+                    this.displayCommentary(comment);
+                } else {
+                    console.log('AI service not available, using fallback comment');
+                    const fallback = this.getFallbackComment(eventType);
+                    this.displayCommentary(fallback);
+                }
+            } catch (aiError) {
+                console.warn('AI commentary failed, using fallback:', aiError);
+                const fallback = this.getFallbackComment(eventType);
+                this.displayCommentary(fallback);
+            }
         } catch (error) {
             console.warn('Commentary generation failed, using fallback:', error);
             const fallback = this.getFallbackComment(eventType);
