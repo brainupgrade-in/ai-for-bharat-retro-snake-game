@@ -4,6 +4,7 @@ import { Snake } from './snake.js';
 import { Food } from './food.js';
 import { AIService } from './ai-service.js';
 import { CommentaryManager } from './commentary.js';
+import { DifficultyManager } from './difficulty.js';
 
 export class Game {
     constructor(canvas) {
@@ -44,6 +45,11 @@ export class Game {
         this.commentaryEnabled = settings.commentaryEnabled || false;
         this.commentaryManager.setEnabled(this.commentaryEnabled);
         
+        // Difficulty manager
+        this.difficultyManager = new DifficultyManager();
+        const difficulty = settings.difficulty || 'MEDIUM';
+        this.difficultyManager.setMode(difficulty);
+        
         // Initialize AI with saved credentials if available
         if (settings.awsCredentials) {
             this.initializeAI(settings.awsCredentials);
@@ -54,9 +60,10 @@ export class Game {
         this.highScore = this.loadHighScore();
         
         // Game timing
-        this.gameSpeed = CONFIG.INITIAL_SPEED;
+        this.gameSpeed = this.difficultyManager.getGameSpeed();
         this.lastUpdate = 0;
         this.lastRender = 0;
+        this.gameStartTime = 0;
         
         // Game loop control
         this.animationId = null;
@@ -76,6 +83,7 @@ export class Game {
             this.state = CONFIG.STATES.PLAYING;
             this.isRunning = true;
             this.lastUpdate = performance.now();
+            this.gameStartTime = performance.now();
             this.gameLoop();
             console.log('Game started');
         }
@@ -124,7 +132,7 @@ export class Game {
         
         // Reset score and timing
         this.score = 0;
-        this.gameSpeed = CONFIG.INITIAL_SPEED;
+        this.gameSpeed = this.difficultyManager.getGameSpeed();
         this.lastUpdate = 0;
         
         console.log('Game reset');
@@ -412,8 +420,13 @@ export class Game {
                 gridSize: CONFIG.GRID_SIZE
             };
             
-            // Get AI move decision
-            const aiMove = await this.aiService.getAIMove(gameState);
+            // Get AI move decision with difficulty parameters
+            const difficultyParams = {
+                aggression: this.difficultyManager.getAIAggression(),
+                mistakeRate: this.difficultyManager.getAIMistakeRate()
+            };
+            
+            const aiMove = await this.aiService.getAIMove(gameState, difficultyParams);
             
             if (aiMove) {
                 // Set AI snake direction
@@ -443,10 +456,8 @@ export class Game {
         // Spawn new food
         this.spawnFood();
         
-        // Increase game speed slightly
-        if (this.gameSpeed > CONFIG.MIN_SPEED) {
-            this.gameSpeed = Math.max(CONFIG.MIN_SPEED, this.gameSpeed - CONFIG.SPEED_INCREMENT);
-        }
+        // Update game speed from difficulty manager
+        this.gameSpeed = this.difficultyManager.getGameSpeed();
         
         // Trigger commentary
         this.commentaryManager.triggerEvent('PLAYER_EAT', {
@@ -491,6 +502,17 @@ export class Game {
         this.state = CONFIG.STATES.GAME_OVER;
         this.isRunning = false;
         
+        // Record game result for difficulty adjustment
+        const survivalTime = performance.now() - this.gameStartTime;
+        const aiScore = this.aiEnabled ? this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH : 0;
+        
+        this.difficultyManager.recordGame({
+            won: false,
+            score: this.score,
+            survivalTime: Math.round(survivalTime),
+            aiScore: aiScore
+        });
+        
         // Update high score if necessary
         if (this.score > this.highScore) {
             this.highScore = this.score;
@@ -515,6 +537,19 @@ export class Game {
     handleAIGameOver() {
         this.aiSnake.alive = false;
         
+        // If this was the final outcome (no more AI), record as player win
+        if (!this.aiSnake.alive) {
+            const survivalTime = performance.now() - this.gameStartTime;
+            const aiScore = this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH;
+            
+            this.difficultyManager.recordGame({
+                won: true,
+                score: this.score,
+                survivalTime: Math.round(survivalTime),
+                aiScore: aiScore
+            });
+        }
+        
         // Trigger player win commentary
         this.commentaryManager.triggerEvent('PLAYER_WIN', {
             playerScore: this.score,
@@ -530,6 +565,17 @@ export class Game {
     handleDrawGame() {
         this.state = CONFIG.STATES.GAME_OVER;
         this.isRunning = false;
+        
+        // Record draw game (neither won)
+        const survivalTime = performance.now() - this.gameStartTime;
+        const aiScore = this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH;
+        
+        this.difficultyManager.recordGame({
+            won: false, // Draw counts as no win for difficulty purposes
+            score: this.score,
+            survivalTime: Math.round(survivalTime),
+            aiScore: aiScore
+        });
         
         // Update high score if necessary
         if (this.score > this.highScore) {
@@ -823,5 +869,37 @@ export class Game {
      */
     isCommentaryEnabled() {
         return this.commentaryEnabled;
+    }
+    
+    /**
+     * Set difficulty mode
+     * @param {string} mode - Difficulty mode
+     */
+    setDifficulty(mode) {
+        this.difficultyManager.setMode(mode);
+        this.gameSpeed = this.difficultyManager.getGameSpeed();
+        
+        // Save setting
+        const settings = this.loadSettings();
+        settings.difficulty = mode;
+        this.saveSettings(settings);
+        
+        console.log(`Difficulty set to: ${mode}`);
+    }
+    
+    /**
+     * Get current difficulty mode
+     * @returns {string} Current difficulty mode
+     */
+    getDifficulty() {
+        return this.difficultyManager.getMode();
+    }
+    
+    /**
+     * Get difficulty manager instance
+     * @returns {DifficultyManager} Difficulty manager
+     */
+    getDifficultyManager() {
+        return this.difficultyManager;
     }
 }

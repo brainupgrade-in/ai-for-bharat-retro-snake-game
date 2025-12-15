@@ -44,6 +44,7 @@ function initializeUI() {
     updateScoreDisplay();
     updateGameStateDisplay();
     updateAIStatusDisplay();
+    updateDifficultyDisplay();
     
     console.log('UI initialized');
 }
@@ -350,14 +351,22 @@ function handleMenuOptionClick(optionText) {
             toggleCommentary();
             break;
             
+        case 'Difficulty: Easy':
+        case 'Difficulty: Medium':
+        case 'Difficulty: Hard':
+        case 'Difficulty: Adaptive':
+            // Cycle difficulty
+            cycleDifficulty();
+            break;
+            
         case 'Sound':
             // Toggle sound (placeholder - no sound system implemented yet)
             alert('Sound settings not implemented yet');
             break;
             
-        case 'Difficulty':
-            // Show difficulty options (placeholder)
-            alert('Difficulty settings not implemented yet');
+        case 'Statistics':
+            // Show statistics dialog
+            showStatisticsDialog();
             break;
             
         case 'AWS Settings':
@@ -492,6 +501,64 @@ function toggleCommentary() {
     console.log(`Commentary ${newState ? 'enabled' : 'disabled'}`);
 }
 
+function cycleDifficulty() {
+    if (!game) return;
+    
+    const difficulties = ['EASY', 'MEDIUM', 'HARD', 'ADAPTIVE'];
+    const currentDifficulty = game.getDifficulty();
+    const currentIndex = difficulties.indexOf(currentDifficulty);
+    const nextIndex = (currentIndex + 1) % difficulties.length;
+    const newDifficulty = difficulties[nextIndex];
+    
+    game.setDifficulty(newDifficulty);
+    updateDifficultyDisplay();
+    
+    console.log(`Difficulty set to: ${newDifficulty}`);
+}
+
+function showStatisticsDialog() {
+    if (!game) return;
+    
+    const difficultyManager = game.getDifficultyManager();
+    const stats = difficultyManager.getFormattedStats();
+    
+    // Update statistics display
+    document.getElementById('statsGamesPlayed').textContent = stats.gamesPlayed;
+    document.getElementById('statsGamesWon').textContent = stats.gamesWon;
+    document.getElementById('statsWinRate').textContent = stats.winRate;
+    document.getElementById('statsHighScore').textContent = stats.highScore;
+    document.getElementById('statsAvgScore').textContent = stats.avgScore;
+    document.getElementById('statsCurrentStreak').textContent = stats.currentStreak;
+    document.getElementById('statsBestStreak').textContent = stats.bestStreak;
+    
+    // Update skill level
+    const skillFill = document.getElementById('skillFill');
+    const skillText = document.getElementById('skillText');
+    skillFill.style.width = `${stats.skillLevel}%`;
+    skillText.textContent = `${stats.skillLevel}% - ${stats.skillLabel}`;
+    
+    // Show dialog
+    document.getElementById('statisticsDialog').classList.remove('hidden');
+}
+
+function closeStatisticsDialog() {
+    document.getElementById('statisticsDialog').classList.add('hidden');
+}
+
+function resetStatistics() {
+    if (!game) return;
+    
+    if (confirm('Are you sure you want to reset all statistics? This cannot be undone.')) {
+        const difficultyManager = game.getDifficultyManager();
+        difficultyManager.resetStats();
+        
+        // Refresh the display
+        showStatisticsDialog();
+        
+        console.log('Statistics reset');
+    }
+}
+
 function closeAllMenus() {
     const menus = document.querySelectorAll('.dropdown-menu');
     menus.forEach(menu => {
@@ -614,3 +681,24 @@ window.showAWSDialog = showAWSDialog;
 window.closeAWSDialog = closeAWSDialog;
 window.saveAWSSettings = saveAWSSettings;
 window.testAWSConnection = testAWSConnection;
+function updateDifficultyDisplay() {
+    if (!game) return;
+    
+    const difficulty = game.getDifficulty();
+    const difficultySelector = document.getElementById('difficultySelector');
+    const difficultyStatus = document.getElementById('difficultyStatus');
+    
+    const difficultyCapitalized = difficulty.charAt(0).toUpperCase() + difficulty.slice(1).toLowerCase();
+    
+    if (difficultySelector) {
+        difficultySelector.textContent = `Difficulty: ${difficultyCapitalized}`;
+    }
+    
+    if (difficultyStatus) {
+        difficultyStatus.textContent = `Difficulty: ${difficultyCapitalized}`;
+    }
+}
+
+// Make functions globally available
+window.closeStatisticsDialog = closeStatisticsDialog;
+window.resetStatistics = resetStatistics;

@@ -65,6 +65,65 @@
             <div class="status-field">Score: <span id="currentScore">0</span></div>
             <div class="status-field">High Score: <span id="highScore">0</span></div>
             <div class="status-field" id="aiStatus">AI: OFF</div>
+            <div class="status-field difficulty" id="difficultyStatus">Difficulty: Medium</div>
+        </div>
+    </div>
+
+    <!-- Statistics Dialog -->
+    <div id="statisticsDialog" class="overlay hidden">
+        <div class="dialog-window">
+            <div class="title-bar">
+                <div class="title-text">Your Statistics</div>
+                <button class="close-button" onclick="closeStatisticsDialog()">×</button>
+            </div>
+            <div class="dialog-content">
+                <div class="stats-grid">
+                    <div class="stat-row">
+                        <span class="stat-label">Games Played:</span>
+                        <span class="stat-value" id="statsGamesPlayed">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Games Won:</span>
+                        <span class="stat-value" id="statsGamesWon">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Win Rate:</span>
+                        <span class="stat-value" id="statsWinRate">0%</span>
+                    </div>
+                    <div class="stat-separator"></div>
+                    <div class="stat-row">
+                        <span class="stat-label">High Score:</span>
+                        <span class="stat-value" id="statsHighScore">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Average Score:</span>
+                        <span class="stat-value" id="statsAvgScore">0.0</span>
+                    </div>
+                    <div class="stat-separator"></div>
+                    <div class="stat-row">
+                        <span class="stat-label">Current Streak:</span>
+                        <span class="stat-value" id="statsCurrentStreak">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Best Streak:</span>
+                        <span class="stat-value" id="statsBestStreak">0</span>
+                    </div>
+                    <div class="stat-separator"></div>
+                    <div class="stat-row">
+                        <span class="stat-label">Skill Level:</span>
+                        <div class="skill-container">
+                            <div class="skill-bar">
+                                <div class="skill-fill" id="skillFill"></div>
+                            </div>
+                            <span class="skill-text" id="skillText">0% - Novice</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dialog-buttons">
+                    <button class="btn" onclick="resetStatistics()">Reset</button>
+                    <button class="btn" onclick="closeStatisticsDialog()">OK</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -115,14 +174,15 @@
         <div class="menu-option" id="aiToggle">AI Opponent: OFF</div>
         <div class="menu-option" id="aiDifficulty">AI Difficulty: Medium</div>
         <div class="menu-option" id="commentaryToggle">Commentary: OFF</div>
+        <div class="menu-option" id="difficultySelector">Difficulty: Medium</div>
         <div class="menu-separator"></div>
         <div class="menu-option" id="awsSettings">AWS Settings</div>
         <div class="menu-option">Sound</div>
-        <div class="menu-option">Difficulty</div>
     </div>
 
     <div id="helpMenu" class="dropdown-menu hidden">
         <div class="menu-option">Instructions</div>
+        <div class="menu-option" id="statisticsOption">Statistics</div>
         <div class="menu-option">About</div>
     </div>
 
