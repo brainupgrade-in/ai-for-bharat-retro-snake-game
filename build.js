@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Build configuration
-const BUILD_DIR = 'dist';
+const BUILD_DIR = 'docs';
 const SOURCE_FILES = [
     'index.html',
     'css/',
@@ -32,11 +32,11 @@ console.log('🚀 Building Snake Game for production...\n');
 // Clean and create dist directory
 if (fs.existsSync(BUILD_DIR)) {
     fs.rmSync(BUILD_DIR, { recursive: true, force: true });
-    console.log('✅ Cleaned existing dist directory');
+    console.log('✅ Cleaned existing docs directory');
 }
 
 fs.mkdirSync(BUILD_DIR, { recursive: true });
-console.log('✅ Created dist directory');
+console.log('✅ Created docs directory');
 
 // Copy files recursively
 function copyRecursive(src, dest) {
@@ -166,12 +166,12 @@ fs.writeFileSync(path.join(__dirname, BUILD_DIR, '.nojekyll'), '');
 console.log('✅ Created .nojekyll file for GitHub Pages');
 
 console.log('\n🎉 Production build completed successfully!');
-console.log(`📁 Build output: ${BUILD_DIR}/`);
+console.log(`📁 Build output: ${BUILD_DIR}/ (ready for GitHub Pages)`);
 console.log('\n📋 Next steps for GitHub Pages deployment:');
-console.log('1. Push the dist/ folder to your repository');
+console.log('1. Push the docs/ folder to your repository');
 console.log('2. Go to your GitHub repository settings');
 console.log('3. Navigate to Pages section');
 console.log('4. Set source to "Deploy from a branch"');
-console.log('5. Select "main" branch and "/dist" folder');
+console.log('5. Select "main" branch and "/docs" folder');
 console.log('6. Save and wait for deployment');
-console.log('\n🌐 Your game will be available at: https://your-username.github.io/your-repo-name/');
+console.log('\n🌐 Your game will be available at: https://brainupgrade-in.github.io/ai-for-bharat-retro-snake-game/');
