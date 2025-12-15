@@ -874,7 +874,7 @@ function showAWSDialog() {
         // Load existing settings
         const settings = game ? game.loadSettings() : {};
         if (settings.awsCredentials) {
-            document.getElementById('awsRegion').value = settings.awsCredentials.region || 'us-east-1';
+            document.getElementById('awsRegion').value = settings.awsCredentials.region || 'ap-south-1';
             document.getElementById('awsAccessKey').value = settings.awsCredentials.accessKeyId || '';
             document.getElementById('awsSecretKey').value = settings.awsCredentials.secretAccessKey || '';
             document.getElementById('awsSessionToken').value = settings.awsCredentials.sessionToken || '';
@@ -944,18 +944,27 @@ async function testAWSConnection() {
         // Test AWS credentials by making a simple call
         if (typeof window !== 'undefined' && window.AWS) {
             window.AWS.config.update({
-                region: region || 'us-east-1',
+                region: region || 'ap-south-1',
                 accessKeyId,
                 secretAccessKey,
                 sessionToken: sessionToken || undefined
             });
             
-            const bedrock = new window.AWS.BedrockRuntime({
-                region: region || 'us-east-1'
+            // Use STS to test credentials (available in AWS SDK v2)
+            const sts = new window.AWS.STS({
+                region: region || 'ap-south-1'
             });
             
-            // Try to list foundation models (this requires minimal permissions)
-            showAWSStatus('Connection successful! AWS Bedrock is accessible.', 'success');
+            // Test credentials with getCallerIdentity
+            sts.getCallerIdentity({}, (err, data) => {
+                if (err) {
+                    console.error('AWS connection test failed:', err);
+                    showAWSStatus(`Connection failed: ${err.message}`, 'error');
+                } else {
+                    console.log('AWS credentials valid:', data);
+                    showAWSStatus('Connection successful! AWS credentials are valid.', 'success');
+                }
+            });
         } else {
             showAWSStatus('AWS SDK not loaded. Please refresh the page.', 'error');
         }

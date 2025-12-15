@@ -3,8 +3,8 @@ import { CONFIG } from './config.js';
 
 export class AIService {
     constructor() {
-        // Bedrock client (will be initialized when credentials are provided)
-        this.client = null;
+        // Bedrock credentials (will be set when credentials are provided)
+        this.credentials = null;
         this.enabled = false;
         
         // Configuration
@@ -48,21 +48,24 @@ export class AIService {
     async initialize(credentials = null) {
         try {
             if (credentials && typeof window !== 'undefined' && window.AWS) {
-                // Configure AWS SDK
-                window.AWS.config.update({
-                    region: credentials.region || 'us-east-1',
+                // Store credentials for manual API calls
+                this.credentials = {
+                    region: credentials.region || 'ap-south-1',
                     accessKeyId: credentials.accessKeyId,
                     secretAccessKey: credentials.secretAccessKey,
                     sessionToken: credentials.sessionToken
-                });
+                };
                 
-                // Initialize Bedrock Runtime client
-                this.client = new window.AWS.BedrockRuntime({
-                    region: credentials.region || 'us-east-1'
+                // Configure AWS SDK for other services
+                window.AWS.config.update({
+                    region: this.credentials.region,
+                    accessKeyId: this.credentials.accessKeyId,
+                    secretAccessKey: this.credentials.secretAccessKey,
+                    sessionToken: this.credentials.sessionToken
                 });
                 
                 this.enabled = true;
-                console.log('Bedrock client initialized successfully');
+                console.log('AWS credentials stored successfully (Bedrock API calls will use fallback for now)');
             } else {
                 console.log('No credentials provided, using fallback AI only');
                 this.enabled = false;
@@ -88,7 +91,7 @@ export class AIService {
         let move = null;
         
         // Try Bedrock API if enabled
-        if (this.enabled && this.client) {
+        if (this.enabled && this.credentials) {
             try {
                 move = await this.getBedrockMove(gameState);
             } catch (error) {
@@ -144,14 +147,9 @@ export class AIService {
             setTimeout(() => reject(new Error('Timeout')), this.timeout);
         });
         
-        // Race between API call and timeout
-        const response = await Promise.race([
-            this.client.invokeModel(params).promise(),
-            timeoutPromise
-        ]);
-        
-        const responseBody = JSON.parse(response.body.toString());
-        return this.parseResponse(responseBody);
+        // For now, throw an error to use fallback
+        // TODO: Implement direct HTTP calls to Bedrock API
+        throw new Error('Bedrock API not yet implemented with direct HTTP calls');
     }
     
     /**
@@ -407,7 +405,7 @@ Reply with exactly one word: UP, DOWN, LEFT, or RIGHT`;
      * @param {boolean} enabled - Whether to enable AI
      */
     setEnabled(enabled) {
-        this.enabled = enabled && this.client !== null;
+        this.enabled = enabled && this.credentials !== null;
         console.log(`AI service ${this.enabled ? 'enabled' : 'disabled'}`);
     }
     
