@@ -11,80 +11,182 @@
             background: #008080;
             color: white;
             padding: 20px;
-            text-align: center;
+            margin: 0;
         }
 
-        .status {
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
             background: #C0C0C0;
             color: black;
             padding: 20px;
             border: 2px outset #C0C0C0;
-            margin: 20px auto;
-            max-width: 600px;
+        }
+
+        .check-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px inset #C0C0C0;
         }
 
         .success {
-            border-color: #00FF00;
+            background: #90EE90;
         }
 
         .error {
-            border-color: #FF0000;
+            background: #FFB6C1;
         }
 
-        a {
-            color: #000080;
-            text-decoration: underline;
+        .warning {
+            background: #FFFFE0;
+        }
+
+        button {
+            background: #C0C0C0;
+            border: 2px outset #C0C0C0;
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        button:active {
+            border: 2px inset #C0C0C0;
         }
     </style>
 </head>
 
 <body>
-    <h1>🐍 Retro Snake AI - Deployment Check</h1>
+    <div class="container">
+        <h1>🐍 Retro Snake AI - Deployment Check</h1>
+        <p>This page verifies that all components are properly deployed.</p>
 
-    <div class="status success">
-        <h2>✅ Production Build Ready!</h2>
-        <p><strong>Version:</strong> 1.0.0</p>
-        <p><strong>Build Date:</strong> <span id="buildDate"></span></p>
-        <p><strong>Status:</strong> All files deployed successfully</p>
-    </div>
+        <div id="checks">
+            <div class="check-item" id="htmlCheck">
+                ⏳ Checking HTML structure...
+            </div>
+            <div class="check-item" id="cssCheck">
+                ⏳ Checking CSS files...
+            </div>
+            <div class="check-item" id="jsCheck">
+                ⏳ Checking JavaScript modules...
+            </div>
+            <div class="check-item" id="gameCheck">
+                ⏳ Checking game initialization...
+            </div>
+            <div class="check-item" id="aiCheck">
+                ⏳ Checking AI service...
+            </div>
+        </div>
 
-    <div class="status">
-        <h3>📁 Deployed Files:</h3>
-        <ul style="text-align: left; display: inline-block;">
-            <li>✅ index.html (Main game file)</li>
-            <li>✅ css/win95.css (Windows 95 styling)</li>
-            <li>✅ css/game.css (Game-specific styles)</li>
-            <li>✅ js/main.js (Game initialization)</li>
-            <li>✅ js/game.js (Game engine)</li>
-            <li>✅ js/sounds.js (Audio system)</li>
-            <li>✅ js/commentary.js (AI commentary)</li>
-            <li>✅ js/difficulty.js (Dynamic difficulty)</li>
-            <li>✅ js/ai-service.js (AI opponent)</li>
-            <li>✅ All supporting JavaScript modules</li>
-            <li>✅ README.md (Documentation)</li>
-            <li>✅ package.json (Project metadata)</li>
-        </ul>
-    </div>
+        <div style="margin-top: 20px;">
+            <button onclick="runChecks()">🔄 Run Checks</button>
+            <button onclick="window.location.href='index.html'">🎮 Launch Game</button>
+        </div>
 
-    <div class="status">
-        <h3>🎮 Ready to Play!</h3>
-        <p><a href="index.html">Launch Retro Snake AI Game</a></p>
-        <p><em>Compatible with all modern browsers</em></p>
-    </div>
-
-    <div class="status">
-        <h3>🚀 GitHub Pages Deployment</h3>
-        <p>This build is ready for GitHub Pages deployment.</p>
-        <p>Simply push the <code>docs/</code> folder to your repository and enable GitHub Pages.</p>
+        <div id="results" style="margin-top: 20px;"></div>
     </div>
 
     <script>
-        document.getElementById('buildDate').textContent = new Date().toLocaleString();
+        async function runChecks() {
+            const results = [];
 
-        // Simple deployment test
-        console.log('🐍 Retro Snake AI - Production Build');
-        console.log('✅ All systems operational');
-        console.log('🎮 Ready for deployment!');
+            // Check HTML
+            try {
+                const response = await fetch('index.html');
+                if (response.ok) {
+                    document.getElementById('htmlCheck').className = 'check-item success';
+                    document.getElementById('htmlCheck').innerHTML = '✅ HTML file loaded successfully';
+                    results.push('✅ HTML: OK');
+                } else {
+                    throw new Error('HTML not found');
+                }
+            } catch (error) {
+                document.getElementById('htmlCheck').className = 'check-item error';
+                document.getElementById('htmlCheck').innerHTML = '❌ HTML file not found';
+                results.push('❌ HTML: FAILED');
+            }
+
+            // Check CSS
+            try {
+                const win95Response = await fetch('css/win95.css');
+                const gameResponse = await fetch('css/game.css');
+                if (win95Response.ok && gameResponse.ok) {
+                    document.getElementById('cssCheck').className = 'check-item success';
+                    document.getElementById('cssCheck').innerHTML = '✅ CSS files loaded successfully';
+                    results.push('✅ CSS: OK');
+                } else {
+                    throw new Error('CSS files not found');
+                }
+            } catch (error) {
+                document.getElementById('cssCheck').className = 'check-item error';
+                document.getElementById('cssCheck').innerHTML = '❌ CSS files not found';
+                results.push('❌ CSS: FAILED');
+            }
+
+            // Check JavaScript
+            try {
+                const mainResponse = await fetch('js/main.js');
+                const gameResponse = await fetch('js/game.js');
+                const aiResponse = await fetch('js/ai-service.js');
+                if (mainResponse.ok && gameResponse.ok && aiResponse.ok) {
+                    document.getElementById('jsCheck').className = 'check-item success';
+                    document.getElementById('jsCheck').innerHTML = '✅ JavaScript modules loaded successfully';
+                    results.push('✅ JavaScript: OK');
+                } else {
+                    throw new Error('JavaScript files not found');
+                }
+            } catch (error) {
+                document.getElementById('jsCheck').className = 'check-item error';
+                document.getElementById('jsCheck').innerHTML = '❌ JavaScript files not found';
+                results.push('❌ JavaScript: FAILED');
+            }
+
+            // Check game initialization
+            try {
+                // Try to load the main module
+                const module = await import('./js/config.js');
+                if (module.CONFIG) {
+                    document.getElementById('gameCheck').className = 'check-item success';
+                    document.getElementById('gameCheck').innerHTML = '✅ Game configuration loaded successfully';
+                    results.push('✅ Game Config: OK');
+                } else {
+                    throw new Error('Game config not found');
+                }
+            } catch (error) {
+                document.getElementById('gameCheck').className = 'check-item warning';
+                document.getElementById('gameCheck').innerHTML = '⚠️ Game config check failed (may work in game context)';
+                results.push('⚠️ Game Config: WARNING');
+            }
+
+            // Check AI service
+            try {
+                const aiModule = await import('./js/ai-service.js');
+                if (aiModule.AIService) {
+                    document.getElementById('aiCheck').className = 'check-item success';
+                    document.getElementById('aiCheck').innerHTML = '✅ AI service loaded successfully';
+                    results.push('✅ AI Service: OK');
+                } else {
+                    throw new Error('AI service not found');
+                }
+            } catch (error) {
+                document.getElementById('aiCheck').className = 'check-item warning';
+                document.getElementById('aiCheck').innerHTML = '⚠️ AI service check failed (may work in game context)';
+                results.push('⚠️ AI Service: WARNING');
+            }
+
+            // Display summary
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h3>📊 Deployment Summary</h3>
+                <pre>${results.join('\n')}</pre>
+                <p><strong>Status:</strong> ${results.filter(r => r.includes('❌')).length === 0 ?
+                    '🟢 Ready for production!' :
+                    '🔴 Issues detected - check failed items'}</p>
+            `;
+        }
+
+        // Run checks on page load
+        window.addEventListener('load', runChecks);
     </script>
 </body>
 
