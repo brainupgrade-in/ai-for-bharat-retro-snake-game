@@ -344,6 +344,12 @@ function handleMenuOptionClick(optionText) {
             cycleAIDifficulty();
             break;
             
+        case 'Commentary: OFF':
+        case 'Commentary: ON':
+            // Toggle commentary
+            toggleCommentary();
+            break;
+            
         case 'Sound':
             // Toggle sound (placeholder - no sound system implemented yet)
             alert('Sound settings not implemented yet');
@@ -447,10 +453,12 @@ function updateAIStatusDisplay() {
     
     const aiEnabled = game.isAIEnabled();
     const aiDifficulty = game.getAIDifficulty();
+    const commentaryEnabled = game.isCommentaryEnabled();
     
     // Update menu options
     const aiToggleElement = document.getElementById('aiToggle');
     const aiDifficultyElement = document.getElementById('aiDifficulty');
+    const commentaryToggleElement = document.getElementById('commentaryToggle');
     
     if (aiToggleElement) {
         aiToggleElement.textContent = `AI Opponent: ${aiEnabled ? 'ON' : 'OFF'}`;
@@ -461,11 +469,27 @@ function updateAIStatusDisplay() {
         aiDifficultyElement.textContent = `AI Difficulty: ${difficultyCapitalized}`;
     }
     
+    if (commentaryToggleElement) {
+        commentaryToggleElement.textContent = `Commentary: ${commentaryEnabled ? 'ON' : 'OFF'}`;
+    }
+    
     // Update status bar
     const aiStatusElement = document.getElementById('aiStatus');
     if (aiStatusElement) {
         aiStatusElement.textContent = `AI: ${aiEnabled ? 'ON' : 'OFF'}`;
     }
+}
+
+function toggleCommentary() {
+    if (!game) return;
+    
+    const currentlyEnabled = game.isCommentaryEnabled();
+    const newState = !currentlyEnabled;
+    
+    game.setCommentaryEnabled(newState);
+    updateAIStatusDisplay();
+    
+    console.log(`Commentary ${newState ? 'enabled' : 'disabled'}`);
 }
 
 function closeAllMenus() {

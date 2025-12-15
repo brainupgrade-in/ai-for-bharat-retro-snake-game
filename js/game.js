@@ -3,6 +3,7 @@ import { CONFIG, COLLISION_TYPES } from './config.js';
 import { Snake } from './snake.js';
 import { Food } from './food.js';
 import { AIService } from './ai-service.js';
+import { CommentaryManager } from './commentary.js';
 
 export class Game {
     constructor(canvas) {
@@ -37,6 +38,11 @@ export class Game {
         this.aiService = new AIService();
         const settings = this.loadSettings();
         this.aiEnabled = settings.aiEnabled || false;
+        
+        // Commentary manager
+        this.commentaryManager = new CommentaryManager(this.aiService);
+        this.commentaryEnabled = settings.commentaryEnabled || false;
+        this.commentaryManager.setEnabled(this.commentaryEnabled);
         
         // Initialize AI with saved credentials if available
         if (settings.awsCredentials) {
@@ -354,6 +360,20 @@ export class Game {
             this.gameSpeed = Math.max(CONFIG.MIN_SPEED, this.gameSpeed - CONFIG.SPEED_INCREMENT);
         }
         
+        // Trigger commentary
+        this.commentaryManager.triggerEvent('PLAYER_EAT', {
+            playerScore: this.score,
+            aiScore: this.aiEnabled ? this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH : 0
+        });
+        
+        // Check for score milestone (every 5 points)
+        if (this.score % 5 === 0) {
+            this.commentaryManager.triggerEvent('SCORE_MILESTONE', {
+                playerScore: this.score,
+                aiScore: this.aiEnabled ? this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH : 0
+            });
+        }
+        
         console.log('Player ate food! Score:', this.score, 'Speed:', this.gameSpeed);
     }
     
@@ -366,6 +386,12 @@ export class Game {
         
         // Spawn new food
         this.spawnFood();
+        
+        // Trigger commentary
+        this.commentaryManager.triggerEvent('AI_EAT', {
+            playerScore: this.score,
+            aiScore: this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH
+        });
         
         console.log('AI ate food! AI snake grew.');
     }
@@ -384,6 +410,14 @@ export class Game {
             console.log('New high score!', this.highScore);
         }
         
+        // Trigger commentary based on who won
+        if (this.aiEnabled && this.aiSnake.alive) {
+            this.commentaryManager.triggerEvent('AI_WIN', {
+                playerScore: this.score,
+                aiScore: this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH
+            });
+        }
+        
         console.log('Player game over! Final score:', this.score);
     }
     
@@ -392,6 +426,13 @@ export class Game {
      */
     handleAIGameOver() {
         this.aiSnake.alive = false;
+        
+        // Trigger player win commentary
+        this.commentaryManager.triggerEvent('PLAYER_WIN', {
+            playerScore: this.score,
+            aiScore: this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH
+        });
+        
         console.log('AI snake died! Player continues alone.');
     }
     
@@ -408,6 +449,12 @@ export class Game {
             this.saveHighScore();
             console.log('New high score!', this.highScore);
         }
+        
+        // Trigger draw commentary
+        this.commentaryManager.triggerEvent('DRAW', {
+            playerScore: this.score,
+            aiScore: this.aiSnake.body.length - CONFIG.AI_SNAKE.INITIAL_LENGTH
+        });
         
         console.log('Draw game! Both snakes collided head-to-head.');
     }
@@ -666,3 +713,26 @@ export class Game {
         console.log('Game destroyed');
     }
 }
+    /**
+     * Enable/disable commentary
+     * @param {boolean} enabled - Whether to enable commentary
+     */
+    setCommentaryEnabled(enabled) {
+        this.commentaryEnabled = enabled;
+        this.commentaryManager.setEnabled(enabled);
+        
+        // Save setting
+        const settings = this.loadSettings();
+        settings.commentaryEnabled = enabled;
+        this.saveSettings(settings);
+        
+        console.log(`Commentary ${enabled ? 'enabled' : 'disabled'}`);
+    }
+    
+    /**
+     * Check if commentary is enabled
+     * @returns {boolean} True if commentary is enabled
+     */
+    isCommentaryEnabled() {
+        return this.commentaryEnabled;
+    }

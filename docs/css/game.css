@@ -185,3 +185,23 @@
 .status-message.error {
     color: #800000;
 }
+
+/* Commentary Box */
+.commentary-box {
+    font-family: 'MS Sans Serif', Arial, sans-serif;
+    font-size: 12px;
+    background: #FFFFFF;
+    border: 2px inset #C0C0C0;
+    padding: 8px;
+    min-height: 24px;
+    text-align: center;
+    overflow: hidden;
+    margin: 8px 0;
+    display: none;
+    color: #000000;
+    line-height: 1.2;
+}
+
+.commentary-box.hidden {
+    display: none;
+}

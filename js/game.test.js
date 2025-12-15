@@ -2,6 +2,20 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert';
 import fc from 'fast-check';
+
+// Mock CommentaryManager for testing
+class MockCommentaryManager {
+    constructor() {
+        this.enabled = false;
+    }
+    setEnabled() {}
+    triggerEvent() {}
+}
+
+// Mock the commentary module
+const mockCommentary = { CommentaryManager: MockCommentaryManager };
+
+// Import Game after setting up mocks
 import { Game } from './game.js';
 import { CONFIG, COLLISION_TYPES } from './config.js';
 
