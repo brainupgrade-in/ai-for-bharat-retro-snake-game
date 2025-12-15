@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retro Snake AI - Cover Image</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #008080; /* Win95 teal */
+      font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, sans-serif;
+    }
+
+    .cover {
+      width: 1200px;
+      height: 630px;
+      background: linear-gradient(135deg, #000033 0%, #001a00 50%, #000033 100%);
+      position: relative;
+      overflow: hidden;
+      border: 4px solid #c0c0c0;
+      box-shadow:
+        inset 1px 1px 0 #ffffff,
+        inset -1px -1px 0 #808080,
+        4px 4px 0 #000000;
+    }
+
+    /* Grid background */
+    .grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+
+    /* Win95 Title Bar */
+    .title-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 28px;
+      background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      border-bottom: 2px solid #808080;
+    }
+
+    .title-bar-icon {
+      width: 18px;
+      height: 18px;
+      margin-right: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .title-bar-text {
+      color: white;
+      font-size: 13px;
+      font-weight: bold;
+      flex: 1;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    .title-bar-buttons {
+      display: flex;
+      gap: 2px;
+    }
+
+    .title-btn {
+      width: 18px;
+      height: 16px;
+      background: #c0c0c0;
+      border: 1px solid;
+      border-color: #ffffff #808080 #808080 #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    /* Main content area */
+    .content {
+      position: absolute;
+      top: 30px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Player Snake */
+    .snake-player {
+      position: absolute;
+      left: 80px;
+      top: 180px;
+    }
+
+    .snake-segment {
+      width: 28px;
+      height: 28px;
+      position: absolute;
+      border-radius: 4px;
+    }
+
+    .snake-player .snake-segment {
+      background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+      box-shadow:
+        inset 2px 2px 4px rgba(255,255,255,0.3),
+        2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .snake-player .snake-head {
+      background: linear-gradient(135deg, #00ff00 0%, #00aa00 100%);
+      border-radius: 6px;
+    }
+
+    .snake-player .snake-head::before,
+    .snake-player .snake-head::after {
+      content: '';
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #000;
+      border-radius: 50%;
+      top: 6px;
+    }
+
+    .snake-player .snake-head::before { left: 4px; }
+    .snake-player .snake-head::after { right: 4px; }
+
+    /* AI Snake */
+    .snake-ai {
+      position: absolute;
+      right: 80px;
+      top: 280px;
+    }
+
+    .snake-ai .snake-segment {
+      background: linear-gradient(135deg, #ff6600 0%, #ff3300 100%);
+      box-shadow:
+        inset 2px 2px 4px rgba(255,255,255,0.3),
+        2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .snake-ai .snake-head {
+      background: linear-gradient(135deg, #ff6600 0%, #cc3300 100%);
+      border-radius: 6px;
+    }
+
+    .snake-ai .snake-head::before,
+    .snake-ai .snake-head::after {
+      content: '';
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #000;
+      border-radius: 50%;
+      top: 6px;
+    }
+
+    .snake-ai .snake-head::before { left: 4px; }
+    .snake-ai .snake-head::after { right: 4px; }
+
+    /* AI Brain indicator */
+    .ai-brain {
+      position: absolute;
+      right: 60px;
+      top: 240px;
+      font-size: 24px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.7; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    /* Food */
+    .food {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: radial-gradient(circle at 30% 30%, #ff4444 0%, #cc0000 100%);
+      border-radius: 50%;
+      box-shadow:
+        inset 2px 2px 4px rgba(255,255,255,0.4),
+        2px 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .food-1 { left: 350px; top: 200px; }
+    .food-2 { right: 380px; top: 350px; }
+    .food-3 { left: 500px; top: 450px; }
+
+    /* Main Title */
+    .main-title {
+      text-align: center;
+      z-index: 10;
+      margin-bottom: 20px;
+    }
+
+    .title-retro {
+      font-size: 72px;
+      font-weight: bold;
+      color: #00ff00;
+      text-shadow:
+        4px 4px 0 #008800,
+        6px 6px 0 #004400,
+        0 0 20px rgba(0, 255, 0, 0.5);
+      letter-spacing: 4px;
+    }
+
+    .title-ai {
+      font-size: 72px;
+      font-weight: bold;
+      color: #ff6600;
+      text-shadow:
+        4px 4px 0 #cc3300,
+        6px 6px 0 #881100,
+        0 0 20px rgba(255, 102, 0, 0.5);
+      letter-spacing: 4px;
+    }
+
+    .subtitle {
+      font-size: 24px;
+      color: #c0c0c0;
+      margin-top: 10px;
+      text-shadow: 2px 2px 0 #000;
+      letter-spacing: 2px;
+    }
+
+    /* VS Badge */
+    .vs-badge {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #ffcc00 0%, #ff9900 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: bold;
+      color: #000;
+      box-shadow:
+        inset 2px 2px 4px rgba(255,255,255,0.5),
+        4px 4px 10px rgba(0,0,0,0.5);
+      border: 3px solid #cc7700;
+      z-index: 20;
+    }
+
+    /* Labels */
+    .label {
+      position: absolute;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 6px 16px;
+      background: #c0c0c0;
+      border: 2px solid;
+      border-color: #ffffff #808080 #808080 #ffffff;
+      box-shadow: 2px 2px 0 #000;
+    }
+
+    .label-player {
+      left: 60px;
+      top: 140px;
+      color: #008800;
+    }
+
+    .label-ai {
+      right: 60px;
+      top: 240px;
+      color: #cc3300;
+    }
+
+    /* AWS Badge */
+    .aws-badge {
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px 24px;
+      border-radius: 4px;
+      border: 2px solid #ff9900;
+    }
+
+    .aws-text {
+      font-size: 16px;
+      color: #ffffff;
+    }
+
+    .bedrock-text {
+      font-size: 18px;
+      font-weight: bold;
+      color: #ff9900;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 26px;
+      background: #c0c0c0;
+      border-top: 2px solid;
+      border-color: #808080 #ffffff #ffffff #808080;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      gap: 4px;
+    }
+
+    .status-section {
+      background: #c0c0c0;
+      border: 1px solid;
+      border-color: #808080 #ffffff #ffffff #808080;
+      padding: 2px 12px;
+      font-size: 12px;
+      color: #000;
+    }
+
+    /* Hackathon Badge */
+    .hackathon-badge {
+      position: absolute;
+      top: 40px;
+      right: 20px;
+      background: linear-gradient(135deg, #ff0066 0%, #cc0052 100%);
+      color: white;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: bold;
+      transform: rotate(5deg);
+      box-shadow: 3px 3px 0 #000;
+      border: 2px solid #fff;
+    }
+
+    /* Floating particles */
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #00ff00;
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
+      50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+    }
+
+    .particle:nth-child(1) { left: 10%; top: 30%; animation-delay: 0s; }
+    .particle:nth-child(2) { left: 20%; top: 60%; animation-delay: 0.5s; }
+    .particle:nth-child(3) { left: 70%; top: 40%; animation-delay: 1s; }
+    .particle:nth-child(4) { left: 85%; top: 70%; animation-delay: 1.5s; }
+    .particle:nth-child(5) { left: 40%; top: 80%; animation-delay: 2s; }
+  </style>
+</head>
+<body>
+  <div class="cover">
+    <!-- Grid Background -->
+    <div class="grid"></div>
+
+    <!-- Floating Particles -->
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+
+    <!-- Win95 Title Bar -->
+    <div class="title-bar">
+      <div class="title-bar-icon">🐍</div>
+      <div class="title-bar-text">snake.exe - Retro Snake AI</div>
+      <div class="title-bar-buttons">
+        <div class="title-btn">_</div>
+        <div class="title-btn">□</div>
+        <div class="title-btn">×</div>
+      </div>
+    </div>
+
+    <!-- Hackathon Badge -->
+    <div class="hackathon-badge">AI for Bharat 2025</div>
+
+    <!-- Player Snake -->
+    <div class="snake-player">
+      <div class="snake-segment snake-head" style="left: 120px; top: 0;"></div>
+      <div class="snake-segment" style="left: 90px; top: 0;"></div>
+      <div class="snake-segment" style="left: 60px; top: 0;"></div>
+      <div class="snake-segment" style="left: 30px; top: 0;"></div>
+      <div class="snake-segment" style="left: 0; top: 0;"></div>
+      <div class="snake-segment" style="left: 0; top: 30px;"></div>
+      <div class="snake-segment" style="left: 0; top: 60px;"></div>
+    </div>
+    <div class="label label-player">PLAYER</div>
+
+    <!-- AI Snake -->
+    <div class="snake-ai">
+      <div class="snake-segment snake-head" style="right: 120px; top: 60px;"></div>
+      <div class="snake-segment" style="right: 90px; top: 60px;"></div>
+      <div class="snake-segment" style="right: 60px; top: 60px;"></div>
+      <div class="snake-segment" style="right: 30px; top: 60px;"></div>
+      <div class="snake-segment" style="right: 0; top: 60px;"></div>
+      <div class="snake-segment" style="right: 0; top: 30px;"></div>
+      <div class="snake-segment" style="right: 0; top: 0;"></div>
+    </div>
+    <div class="label label-ai">AI OPPONENT</div>
+    <div class="ai-brain">🧠</div>
+
+    <!-- Food Items -->
+    <div class="food food-1"></div>
+    <div class="food food-2"></div>
+    <div class="food food-3"></div>
+
+    <!-- VS Badge -->
+    <div class="vs-badge">VS</div>
+
+    <!-- Main Title -->
+    <div class="content">
+      <div class="main-title">
+        <span class="title-retro">RETRO SNAKE</span>
+        <span class="title-ai"> AI</span>
+        <div class="subtitle">Player vs AI - Windows 95 Style</div>
+      </div>
+    </div>
+
+    <!-- AWS Badge -->
+    <div class="aws-badge">
+      <span class="aws-text">Powered by</span>
+      <span class="bedrock-text">Amazon Bedrock</span>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="status-section">Score: 0</div>
+      <div class="status-section">High Score: 42</div>
+      <div class="status-section">AI: ON</div>
+      <div class="status-section">Difficulty: ADAPTIVE</div>
+    </div>
+  </div>
+</body>
+</html>
