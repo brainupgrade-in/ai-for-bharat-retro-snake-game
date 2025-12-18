@@ -1,6 +1,6 @@
-# Bringing Classic Snake into the AI Era: A Journey with Amazon Bedrock
+# Bringing Classic Snake into the AI Era: A Journey with Amazon Bedrock and Kiro IDE
 
-*How a nostalgic Windows 95-style Snake game became an intelligent gaming experience powered by Claude 3 Haiku*
+*How a nostalgic Windows 95-style Snake game became an intelligent gaming experience powered by Claude 3 Haiku—built in record time using Kiro's spec-driven development*
 
 ## The Vision: Where Nostalgia Meets Innovation
 
@@ -8,176 +8,532 @@ Remember the simple joy of playing Snake on your old Nokia phone or Windows comp
 
 That's exactly what Retro Snake AI accomplishes. This project, created for the AI for Bharat hackathon, demonstrates how Amazon Bedrock can breathe new life into classic games without losing their timeless charm.
 
+## The Problem: Building AI-Enhanced Games is Complex
+
+Creating an AI-powered game traditionally involves several challenges:
+
+1. **Complex Architecture Planning**: Deciding how to structure AI services, fallback systems, and game logic requires significant upfront design work
+2. **Integration Complexity**: Connecting to cloud AI services like Amazon Bedrock while maintaining smooth gameplay is technically demanding
+3. **Graceful Degradation**: Ensuring the game remains playable when AI services are unavailable requires thoughtful fallback mechanisms
+4. **Time Constraints**: Hackathon deadlines leave little room for architectural mistakes or rewrites
+
+## The Solution: Kiro IDE + Amazon Bedrock
+
+By combining **Kiro IDE's spec-driven development** approach with **Amazon Bedrock's Claude 3 Haiku** model, we built a complete AI-enhanced game with:
+- Intelligent AI opponent
+- Real-time witty commentary
+- Dynamic difficulty adjustment
+- Robust offline fallback system
+
+All within a 5-day hackathon sprint.
+
+---
+
+## How Kiro Accelerated Development
+
+### What is Kiro?
+
+Kiro is AWS's agentic AI-powered IDE that transforms natural language prompts into structured specifications. Unlike traditional coding assistants that generate snippets, Kiro creates complete requirements documents, architectural designs, and implementation task lists—then autonomously implements them.
+
+### Spec-Driven Development in Action
+
+The magic of Kiro lies in its **spec-driven workflow**. Here's how it accelerated the Retro Snake AI project:
+
+#### Step 1: Steering Files Define Project Context
+
+Kiro uses "steering files" to understand your project's technology stack, architecture, and coding standards. Here's our project's tech steering file:
+
+```markdown
+# Technology Stack
+
+## Frontend
+- Language: JavaScript (ES6+)
+- Rendering: HTML5 Canvas API
+- Styling: CSS3 with Win95 aesthetic
+
+## AI Integration
+### Amazon Bedrock
+- Model: Claude 3 Haiku (anthropic.claude-3-haiku-20240307-v1:0)
+- SDK: @aws-sdk/client-bedrock-runtime
+- Use Cases:
+  - AI opponent decision-making
+  - Commentary generation
+
+### Fallback Systems
+- A* pathfinding algorithm for offline AI
+- Pre-written fallback comments
+```
+
+With this context, Kiro understood our constraints and generated code that matched our architecture perfectly.
+
+#### Step 2: Natural Language to Structured Requirements
+
+Instead of writing code directly, we described features in natural language. Kiro transformed them into structured requirements with acceptance criteria using EARS notation:
+
+**Our input:**
+> "I want an AI opponent snake that competes for food and can work offline"
+
+**Kiro's output (from `.kiro/specs/ai-opponent/requirements.md`):**
+
+```markdown
+### US-011: Intelligent Movement
+**As a** player
+**I want** the AI to make smart moves
+**So that** it provides a fair challenge
+
+**Acceptance Criteria:**
+- [ ] WHEN making decisions THE SYSTEM SHALL use Amazon Bedrock for AI logic
+- [ ] WHEN moving THE SYSTEM SHALL navigate the AI toward food
+- [ ] WHEN near walls THE SYSTEM SHALL have the AI avoid collisions
+- [ ] WHEN near its body THE SYSTEM SHALL have the AI avoid self-collision
+
+### US-014: Offline Fallback
+**As a** player
+**I want** the AI to work without internet
+**So that** I can play anywhere
+
+**Acceptance Criteria:**
+- [ ] WHEN Bedrock API fails THE SYSTEM SHALL use local A* pathfinding
+- [ ] WHEN offline THE SYSTEM SHALL provide comparable AI behavior
+- [ ] WHEN API times out (>500ms) THE SYSTEM SHALL fall back immediately
+```
+
+#### Step 3: Automated Task Generation and Implementation
+
+Kiro generated a detailed task list from the requirements and then implemented each task autonomously:
+
+```markdown
+# Tasks: AI Opponent Snake
+
+### AI Service Setup
+- [x] Create js/ai-service.js with AIService class
+- [x] Set up AWS SDK for Bedrock (browser bundle)
+- [x] Implement Bedrock client initialization
+- [x] Create game state serialization for prompt
+- [x] Design and implement AI move prompt template
+- [x] Implement getAIMove() method with Bedrock call
+
+### Fallback System
+- [x] Create js/ai-pathfinding.js with A* algorithm
+- [x] Implement heuristic function (Manhattan distance)
+- [x] Implement path reconstruction
+- [x] Add timeout handling (500ms max)
+```
+
+![Kiro IDE Development Environment](snake-game-vscode-development.png)
+*Kiro IDE showing the project structure, requirements documentation, and terminal with the development server running*
+
+### Time Savings with Kiro
+
+| Development Phase | Traditional Approach | With Kiro |
+|------------------|---------------------|-----------|
+| Requirements gathering | 1-2 days | 2 hours |
+| Architecture design | 1 day | Auto-generated |
+| Boilerplate code | 4-6 hours | Minutes |
+| AI integration | 2 days | 4 hours |
+| Fallback system | 1 day | 2 hours |
+| **Total** | **5-7 days** | **~1.5 days** |
+
+Kiro's autonomous agents investigated the codebase, understood dependencies, and generated production-ready code that matched our Windows 95 aesthetic perfectly.
+
+---
+
 ## The Game: A Perfect Blend of Old and New
 
 ### Authentic Windows 95 Experience
-The game is a pixel-perfect recreation of the Windows 95 aesthetic that defined an era of computing. Every element—from the beveled gray buttons to the classic title bar—has been meticulously crafted to transport players back to the 1990s. The familiar MS Sans Serif font, the iconic color palette, and even the window chrome all work together to create an authentic retro experience.
 
-But this isn't just about nostalgia. The retro design serves a practical purpose: it's universally accessible, works beautifully across all devices, and creates a focused gaming environment where the AI enhancements can truly shine.
+The game is a pixel-perfect recreation of the Windows 95 aesthetic that defined an era of computing. Every element—from the beveled gray buttons to the classic title bar—has been meticulously crafted to transport players back to the 1990s.
 
-### Modern Responsive Design
-While maintaining its retro appearance, the game adapts seamlessly to modern devices. Whether you're playing on a desktop computer, tablet, or smartphone, the experience remains consistent and engaging. Mobile users get intuitive touch controls that feel natural, while desktop players enjoy the classic keyboard experience.
+![Snake Game Start Screen](snake-game-start-screen.png)
+*The authentic Windows 95-style start screen with game instructions and status bar showing AI: ON*
+
+### Code Snippet: Windows 95 UI Styling
+
+```css
+/* win95.css - Authentic Windows 95 styling */
+.win95-window {
+  background: #c0c0c0;
+  border: 2px outset #dfdfdf;
+  box-shadow:
+    inset 1px 1px 0 #ffffff,
+    inset -1px -1px 0 #808080;
+}
+
+.win95-titlebar {
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: white;
+  font-family: 'MS Sans Serif', sans-serif;
+  padding: 2px 4px;
+}
+
+.win95-button {
+  background: #c0c0c0;
+  border: 2px outset #dfdfdf;
+  font-family: 'MS Sans Serif', sans-serif;
+}
+
+.win95-button:active {
+  border: 2px inset #808080;
+}
+```
+
+---
 
 ## The AI Revolution: Two Intelligent Systems Working Together
 
-What makes this Snake game truly special is its dual AI system that ensures you always have an intelligent opponent, regardless of your internet connection or AWS setup.
+What makes this Snake game truly special is its dual AI system that ensures you always have an intelligent opponent, regardless of your internet connection.
 
 ### Primary AI: Claude 3 Haiku via Amazon Bedrock
-When connected to the internet with AWS credentials configured, the game leverages Claude 3 Haiku through Amazon Bedrock to power both the AI opponent and commentary system.
 
-**The AI Opponent** doesn't just move randomly or follow simple patterns. It analyzes the entire game board, considers multiple strategies, and makes intelligent decisions about where to move next. It competes for food, avoids collisions, and even tries to trap the human player when possible. The AI responds in under half a second, making the gameplay feel natural and competitive.
+When connected to the internet with AWS credentials configured, the game leverages Claude 3 Haiku through Amazon Bedrock.
 
-**The AI Commentary System** provides real-time, contextual remarks during gameplay. Using the same Claude 3 Haiku model, it generates witty comments that react to game events—celebrating good moves, commenting on close calls, and providing entertaining observations with authentic 90s gaming humor.
+**Code Snippet: Bedrock AI Integration**
+
+```javascript
+// ai-service.js - Amazon Bedrock Integration
+import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
+
+class AIService {
+  constructor(config) {
+    this.client = new BedrockRuntimeClient({
+      region: config.region,
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey
+      }
+    });
+    this.modelId = 'anthropic.claude-3-haiku-20240307-v1:0';
+  }
+
+  async getAIMove(gameState) {
+    const prompt = this.buildPrompt(gameState);
+
+    const command = new InvokeModelCommand({
+      modelId: this.modelId,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        anthropic_version: 'bedrock-2023-05-31',
+        max_tokens: 50,
+        messages: [{
+          role: 'user',
+          content: prompt
+        }]
+      })
+    });
+
+    try {
+      const response = await this.client.send(command);
+      return this.parseResponse(response);
+    } catch (error) {
+      // Fallback to A* pathfinding
+      return this.fallbackAI.getMove(gameState);
+    }
+  }
+
+  buildPrompt(gameState) {
+    return `You are an AI snake in a game. Current state:
+- Your position: ${JSON.stringify(gameState.aiSnake)}
+- Food position: ${gameState.food}
+- Player snake: ${JSON.stringify(gameState.playerSnake)}
+- Grid size: 20x20
+
+Choose the best move: UP, DOWN, LEFT, or RIGHT.
+Respond with only the direction.`;
+  }
+}
+```
 
 ### Fallback AI: Advanced A* Pathfinding Algorithm
-Here's where the game's design truly shines: recognizing that internet connectivity and AWS access aren't always available, the developers implemented a sophisticated fallback AI system using the A* (A-star) pathfinding algorithm.
 
-**What is A* Pathfinding?**
-A* is a computer science algorithm used to find the optimal path between two points while avoiding obstacles. In the context of Snake, it helps the AI opponent navigate the game board intelligently, finding the best route to food while avoiding walls and snake bodies.
+The game seamlessly switches to A* pathfinding when Bedrock is unavailable:
 
-**How the Fallback Works:**
-- When AWS Bedrock is unavailable (no internet, no credentials, or API timeout), the game seamlessly switches to the A* pathfinding system
-- The A* algorithm analyzes the game board, calculates multiple possible paths, and chooses the most efficient route to the food
-- It considers obstacles like walls, the player's snake body, and its own body to avoid collisions
-- The system also includes strategic elements like trying to control territory and block the human player
+```javascript
+// ai-pathfinding.js - A* Algorithm Implementation
+class AStarPathfinding {
+  getMove(gameState) {
+    const start = gameState.aiSnake[0];
+    const goal = gameState.food;
 
-**The Beauty of Dual AI:**
-Players never experience a degraded game. Whether powered by Claude 3 Haiku or A* pathfinding, the AI opponent remains challenging and engaging. The transition between systems is completely transparent—you might not even notice when the game switches from cloud AI to local AI.
+    const path = this.findPath(start, goal, gameState);
 
-For commentary, the fallback system uses a curated collection of over 100 witty, contextual comments that capture the same spirit as the AI-generated ones.
-## The Complete Gaming Experience
+    if (path && path.length > 1) {
+      return this.getDirection(start, path[1]);
+    }
 
-### Dynamic Difficulty Adjustment
-The game learns from your playing style and adapts accordingly. As you improve, the AI becomes more challenging. If you're struggling, it becomes more forgiving. This creates a personalized experience where every player finds the right level of challenge, keeping the game engaging for both beginners and experts.
+    // Safe random move if no path found
+    return this.getSafeRandomMove(start, gameState);
+  }
 
-### Immersive Audio Experience
-Using modern web audio technology, the game generates authentic 8-bit sound effects that perfectly complement the retro aesthetic. Players can adjust volume levels, toggle sounds on and off, and even use scroll wheel controls for quick volume adjustments—all while maintaining the classic Windows 95 interface design.
+  findPath(start, goal, gameState) {
+    const openSet = [start];
+    const cameFrom = new Map();
+    const gScore = new Map();
+    const fScore = new Map();
 
-### Cross-Platform Compatibility
-The game works flawlessly across all modern browsers and devices. Desktop users enjoy the full keyboard experience with arrow key controls, while mobile users get responsive touch controls that make playing on smartphones and tablets just as enjoyable.
+    gScore.set(this.key(start), 0);
+    fScore.set(this.key(start), this.heuristic(start, goal));
+
+    while (openSet.length > 0) {
+      const current = this.getLowestFScore(openSet, fScore);
+
+      if (current.x === goal.x && current.y === goal.y) {
+        return this.reconstructPath(cameFrom, current);
+      }
+
+      // A* algorithm continues...
+    }
+    return null;
+  }
+
+  heuristic(a, b) {
+    // Manhattan distance
+    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+  }
+}
+```
+
+### Dual AI in Action
+
+![AI Multiplayer Mode](snake-game-ai-multiplayer-mode.png)
+*The green snake (player) competes against the orange AI snake. Status bar shows "AI: ON" and current direction.*
+
+![Gameplay with Growing Snake](snake-game-gameplay-score.png)
+*Extended gameplay showing the AI opponent navigating toward food while avoiding the player's snake.*
+
+---
+
+## Player Statistics and Progress Tracking
+
+The game tracks comprehensive player statistics, stored locally using the browser's localStorage API:
+
+![Player Statistics Dialog](snake-game-statistics-dialog.png)
+*The Windows 95-style statistics dialog showing games played, win rate, high score, and skill level progression.*
+
+**Code Snippet: Statistics Tracking**
+
+```javascript
+// stats.js - Player Statistics System
+class PlayerStats {
+  constructor() {
+    this.stats = this.load() || {
+      gamesPlayed: 0,
+      gamesWon: 0,
+      highScore: 0,
+      totalScore: 0,
+      skillLevel: 0
+    };
+  }
+
+  recordGame(score, won) {
+    this.stats.gamesPlayed++;
+    if (won) this.stats.gamesWon++;
+    this.stats.totalScore += score;
+
+    if (score > this.stats.highScore) {
+      this.stats.highScore = score;
+    }
+
+    this.updateSkillLevel();
+    this.save();
+  }
+
+  get winRate() {
+    if (this.stats.gamesPlayed === 0) return 0;
+    return (this.stats.gamesWon / this.stats.gamesPlayed) * 100;
+  }
+
+  get averageScore() {
+    if (this.stats.gamesPlayed === 0) return 0;
+    return this.stats.totalScore / this.stats.gamesPlayed;
+  }
+
+  save() {
+    localStorage.setItem('snakeStats', JSON.stringify(this.stats));
+  }
+
+  load() {
+    const data = localStorage.getItem('snakeStats');
+    return data ? JSON.parse(data) : null;
+  }
+}
+```
+
+---
 
 ## Why Amazon Bedrock Was the Perfect Choice
 
 ### Accessibility and Ease of Use
-Amazon Bedrock removes the complexity typically associated with AI integration. Instead of managing servers, training models, or dealing with complex infrastructure, developers can focus on creating great experiences. For this project, Bedrock provided immediate access to Claude 3 Haiku without any setup overhead.
+
+Amazon Bedrock removes the complexity typically associated with AI integration. Instead of managing servers, training models, or dealing with complex infrastructure, developers can focus on creating great experiences.
 
 ### Performance That Matters
-In gaming, every millisecond counts. Bedrock's low-latency responses ensure that AI decisions happen fast enough to maintain smooth 60 FPS gameplay. The average AI response time of under 200 milliseconds means players never feel like they're waiting for the computer to "think."
 
-### Cost-Effective Innovation
-The pay-per-use model makes AI gaming accessible to individual developers and small teams. You only pay for the AI decisions and commentary you actually use, making it economical to experiment and iterate on AI-enhanced gaming concepts.
+In gaming, every millisecond counts. Bedrock's low-latency responses ensure that AI decisions happen fast enough to maintain smooth 60 FPS gameplay. The average AI response time of under 200 milliseconds means players never feel like they're waiting.
 
-### Reliability and Scale
-Bedrock's enterprise-grade infrastructure ensures the game can handle thousands of concurrent players without degradation. The service's reliability means players can count on consistent AI performance.
+**Code Snippet: Timeout Handling**
 
-## The Impact: More Than Just a Game
+```javascript
+// Ensure AI doesn't block gameplay
+async getAIMoveWithTimeout(gameState, timeout = 500) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-### Demonstrating AI Accessibility
-This project proves that sophisticated AI features are no longer exclusive to large gaming studios. Individual developers can now create intelligent, engaging experiences using cloud AI services. The complete source code is available, showing exactly how to integrate Bedrock into real-time applications.
+  try {
+    const move = await this.getAIMove(gameState, controller.signal);
+    clearTimeout(timeoutId);
+    return move;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Bedrock timeout, using fallback');
+      return this.fallbackAI.getMove(gameState);
+    }
+    throw error;
+  }
+}
+```
 
-### Educational Value
-Beyond entertainment, the game serves as a practical example of AI integration. Developers can study the implementation to understand how to:
-- Make real-time API calls to AI services
-- Implement graceful fallback systems
-- Balance performance with AI capabilities
-- Create cost-effective AI usage patterns
+---
 
-### Cultural Bridge
-By combining retro aesthetics with modern AI, the project creates a bridge between gaming's past and future. It shows how AI can enhance rather than replace classic gaming experiences, preserving what we love while adding new dimensions of engagement.
+## The Development Journey: How Kiro Made It Possible
 
-## Player Experience: What Makes It Special
+### Challenge 1: Complex Feature Requirements
 
-### Immediate Engagement
-Players can start enjoying the game immediately, even without AWS credentials. The fallback AI system ensures everyone gets a complete experience, while those who configure Bedrock access get additional AI-powered features.
+**Problem**: The AI for Bharat hackathon required multiple AI features—opponent, commentary, dynamic difficulty—each with complex interactions.
 
-### Progressive Enhancement
-The game follows a progressive enhancement approach:
-1. **Basic Level**: Classic Snake gameplay with keyboard/touch controls
-2. **Enhanced Level**: Intelligent A* pathfinding AI opponent with curated commentary
-3. **Premium Level**: Claude 3 Haiku-powered AI with dynamic commentary generation
+**How Kiro Helped**: We described each feature in natural language. Kiro generated structured specifications with acceptance criteria, ensuring nothing was missed:
 
-### Personalized Experience
-Every game session is unique. The AI adapts to your playing style, the commentary responds to your specific actions, and the difficulty adjusts to keep you engaged. No two games feel exactly the same.
+```markdown
+# From .kiro/specs/snake-game/requirements.md
+
+### Requirement 5
+**User Story:** As a player, I want to start, pause, and restart the game,
+so that I have control over gameplay.
+
+**Acceptance Criteria:**
+1. WHEN the application loads, THE Snake_Game_System SHALL show a start screen
+2. WHEN the player presses SPACE, THE Snake_Game_System SHALL begin the game
+3. WHEN the player presses P or ESC, THE Snake_Game_System SHALL pause or resume
+4. WHEN the game is paused, THE Snake_Game_System SHALL display a pause overlay
+5. WHEN the player presses R after game over, THE Snake_Game_System SHALL restart
+```
+
+### Challenge 2: Ensuring Universal Accessibility
+
+**Problem**: Not everyone has AWS credentials or reliable internet access.
+
+**How Kiro Helped**: When we specified the offline requirement, Kiro automatically designed and implemented the A* fallback system, including timeout handling and seamless switching between cloud and local AI.
+
+### Challenge 3: Maintaining Code Quality Under Time Pressure
+
+**Problem**: Hackathon deadlines often lead to technical debt and inconsistent code.
+
+**How Kiro Helped**: Kiro's steering files enforced consistent coding patterns across all generated code. The project structure, module organization, and coding style remained consistent throughout development.
+
+---
 
 ## Real-World Results and Impact
 
 ### Player Engagement Metrics
+
 During testing and demonstration phases, the game achieved remarkable engagement:
-- Players spent an average of 8.5 minutes per session (significantly above typical casual game averages)
-- 73% of players returned for multiple sessions
-- 89% of players who had access to AI features chose to enable them
-- Mobile usage accounted for 45% of all gameplay sessions
+- Players spent an average of **8.5 minutes per session** (significantly above typical casual game averages)
+- **73%** of players returned for multiple sessions
+- **89%** of players who had access to AI features chose to enable them
+- Mobile usage accounted for **45%** of all gameplay sessions
 
 ### Technical Performance
+
 The game delivers professional-grade performance:
-- Loads in under 2 seconds on 3G networks
-- Maintains consistent 60 FPS gameplay across all supported devices
-- Uses less than 50MB of memory even during extended play sessions
-- Works offline after initial load, thanks to the fallback AI system
-## The Development Journey: Challenges and Solutions
+- Loads in under **2 seconds** on 3G networks
+- Maintains consistent **60 FPS** gameplay across all supported devices
+- Uses less than **50MB** of memory even during extended play sessions
+- Works **offline** after initial load, thanks to the fallback AI system
 
-### Balancing Authenticity with Innovation
-One of the biggest challenges was maintaining the authentic Windows 95 feel while incorporating modern AI features. The solution was to hide advanced functionality behind familiar interface elements. Players interact with classic-looking menus and buttons, but underneath, sophisticated AI systems are at work.
+---
 
-### Ensuring Universal Accessibility
-Not everyone has AWS credentials or reliable internet access. The dual AI system (Bedrock + A* pathfinding) ensures that every player gets an intelligent opponent regardless of their setup. This inclusive design philosophy means the game works for everyone, from AI enthusiasts to casual players.
+## Global Accessibility: Deployed on GitHub Pages
 
-### Performance Optimization
-Making real-time AI calls while maintaining smooth gameplay required careful optimization. The game uses asynchronous processing, intelligent timeouts, and efficient fallback mechanisms to ensure that AI enhancements never compromise the core gaming experience.
+The game is deployed on GitHub Pages, making it instantly accessible to players worldwide without any installation or setup required.
 
-### Cross-Platform Consistency
-Creating a pixel-perfect retro experience that works across modern devices required innovative responsive design techniques. The game maintains its authentic appearance while adapting to different screen sizes and input methods.
+![Live Game on GitHub Pages](snake-win95-retro-game-github-pages.png)
+*Retro Snake AI running live on GitHub Pages at brainupgrade-in.github.io — accessible globally with zero setup*
 
-## Looking Forward: The Future of AI Gaming
+### Static Hosting Benefits
 
-### Immediate Possibilities
-This project opens doors for numerous enhancements:
-- **Multiplayer Modes**: Real-time competition between human players with AI commentary
-- **Tournament Systems**: Bracket-style competitions with intelligent matchmaking
-- **Custom AI Personalities**: Different AI opponents with unique playing styles and commentary voices
-- **Educational Features**: Learn programming concepts through gameplay
+- **Zero server costs** - GitHub Pages provides free hosting for static sites
+- **Global CDN** - Fast loading times worldwide via GitHub's content delivery network
+- **Always available** - No server maintenance or downtime concerns
+- **Instant updates** - Push to `main` branch deploys automatically
 
-### Broader Industry Impact
-Retro Snake AI demonstrates several important trends in gaming:
-- **AI as Creative Partner**: AI enhances rather than replaces human creativity
-- **Accessible AI Integration**: Cloud services make advanced AI available to all developers
-- **Hybrid Intelligence**: Combining cloud AI with local algorithms for optimal performance
-- **Nostalgic Innovation**: Classic games can be revitalized with modern technology
-
-### Community and Open Source
-The complete project is available as open source, encouraging other developers to experiment with AI gaming concepts. This collaborative approach helps advance the entire field of AI-enhanced entertainment.
+---
 
 ## Getting Started: Experience It Yourself
 
 ### For Players
-You can play Retro Snake AI immediately in any modern web browser. The game works without any setup, providing the complete experience through its intelligent fallback systems. For the full AI experience with Claude 3 Haiku, simply configure your AWS Bedrock credentials in the game's settings.
 
-### For Developers
-The project serves as a comprehensive example of AI integration in gaming. The source code demonstrates practical patterns for:
-- Real-time AI API integration
-- Graceful fallback system implementation
-- Performance optimization for AI-dependent applications
-- Cost-effective usage of cloud AI services
+You can play Retro Snake AI immediately in any modern web browser. The game works without any setup, providing the complete experience through its intelligent fallback systems.
+
+### For Developers Using Kiro
+
+To replicate this spec-driven approach:
+
+1. **Install Kiro IDE** from [kiro.dev](https://kiro.dev)
+2. **Create steering files** in `.kiro/steering/` to define your tech stack
+3. **Describe features** in natural language
+4. **Let Kiro generate** requirements, design, and tasks
+5. **Review and iterate** on the generated specifications
+6. **Watch Kiro implement** the code autonomously
 
 ### For AWS Builders
-This project showcases practical applications of Amazon Bedrock in creative contexts. It provides real-world examples of authentication, API usage, error handling, and performance optimization that can be adapted for various AI-enhanced applications.
 
-## Conclusion: A New Era of Intelligent Gaming
-
-Retro Snake AI represents more than just a nostalgic gaming experience—it's a glimpse into the future of interactive entertainment. By successfully combining the beloved simplicity of classic Snake with the intelligence of modern AI, this project demonstrates that innovation doesn't require abandoning what we love about traditional gaming.
-
-The dual AI system, featuring both Amazon Bedrock's Claude 3 Haiku and sophisticated A* pathfinding algorithms, ensures that every player enjoys an intelligent, engaging experience regardless of their technical setup. This inclusive approach to AI integration sets a new standard for how advanced technologies can be made accessible to everyone.
-
-As we look toward the future, projects like this show us that the most exciting innovations often come from unexpected combinations—in this case, 1990s aesthetics with 2020s artificial intelligence. The result is something entirely new: a bridge between gaming's cherished past and its AI-powered future.
-
-Whether you're a gaming enthusiast, a developer interested in AI integration, or simply someone who appreciates the clever combination of old and new, Retro Snake AI offers something special. It proves that with creativity, the right tools, and thoughtful design, individual developers can create experiences that rival those of major studios.
-
-The game is more than entertainment—it's an invitation to imagine what's possible when we combine the best of both worlds. In an age where AI is transforming every industry, Retro Snake AI shows us that the future of gaming isn't about replacing human creativity with artificial intelligence, but about using AI to amplify and enhance the experiences we already love.
+This project showcases practical applications of Amazon Bedrock in creative contexts. The source code demonstrates:
+- Real-time AI API integration
+- AWS Signature V4 authentication in the browser
+- Graceful fallback system implementation
+- Performance optimization for AI-dependent applications
 
 ---
 
-**Experience Retro Snake AI**: [Play Now](https://rajesh-gheware.github.io/retro-snake-ai/)  
-**Explore the Code**: [GitHub Repository](https://github.com/rajesh-gheware/retro-snake-ai)  
-**Connect with the Creator**: [Rajesh Gheware on LinkedIn](https://linkedin.com/in/rajesh-gheware)
+## Conclusion: A New Era of AI-Assisted Development
 
-*This project was created for the AI for Bharat hackathon, demonstrating the transformative potential of AI technology in creative applications. It stands as a testament to what individual developers can achieve with cloud AI services like Amazon Bedrock.*
+Retro Snake AI represents more than just a nostalgic gaming experience—it's a glimpse into the future of software development. By combining **Kiro's spec-driven approach** with **Amazon Bedrock's Claude 3 Haiku**, we achieved in days what traditionally takes weeks.
+
+The key takeaways:
+
+1. **Spec-driven development accelerates delivery**: Writing requirements in natural language and letting AI generate implementation details dramatically reduces development time.
+
+2. **Kiro transforms how we build software**: Instead of writing boilerplate, developers focus on what they want to build. Kiro handles the how.
+
+3. **Amazon Bedrock democratizes AI**: Cloud AI services make sophisticated AI features accessible to individual developers and small teams.
+
+4. **Dual AI systems ensure reliability**: Combining cloud AI with local fallbacks creates robust applications that work everywhere.
+
+Whether you're a gaming enthusiast, a developer interested in AI integration, or someone exploring spec-driven development, Retro Snake AI offers valuable insights. It proves that with the right tools—Kiro for development acceleration and Bedrock for AI capabilities—individual developers can create experiences that rival those of major studios.
+
+The future of development isn't about AI replacing developers—it's about AI amplifying what developers can achieve.
+
+---
+
+**Experience Retro Snake AI**: [Play Now](https://brainupgrade-in.github.io/ai-for-bharat-retro-snake-game/)
+**Explore the Code**: [GitHub Repository](https://github.com/brainupgrade-in/ai-for-bharat-retro-snake-game)
+**AWS Builder Blog**: [Read on AWS Builder Community](https://builder.aws.com/content/36sd5VtfkqObcSjKf6nyCPk7ftN/bringing-classic-snake-into-the-ai-era-a-journey-with-amazon-bedrock)
+**Learn About Kiro**: [kiro.dev](https://kiro.dev)
+
+*This project was created for the AI for Bharat hackathon, demonstrating the transformative potential of AI technology in creative applications. It stands as a testament to what individual developers can achieve with spec-driven development tools like Kiro and cloud AI services like Amazon Bedrock.*
+
+---
+
+## About the Author
+
+### Rajesh Gheware
+
+Rajesh Gheware is a Chief Architect and technology executive with 24+ years of experience in the IT industry. He holds an M.Tech from IIT Madras and has worked with Fortune 500 firms including JP Morgan Chase, Deutsche Bank, and Morgan Stanley.
+
+A Certified Kubernetes Administrator (CKA) and Certified Kubernetes Security Specialist (CKS), he has trained 1000+ professionals from companies like JP Morgan, Standard Chartered Bank, Ericsson, Comcast, Deloitte, and Kyndryl on Docker, Kubernetes, AWS, and Microservices.
+
+As CTO of UniGPS Solutions and founder of BrainUpgrade, he focuses on accelerating enterprise digital transformation through cloud-native technologies. Rajesh is also the author of "Ultimate Certified Kubernetes Administrator" and a published contributor to DZone and OpenSource For U Magazine.
+
+**Connect with Rajesh:**
+- [LinkedIn](https://linkedin.com/in/rajesh-gheware)
+- [YouTube](https://www.youtube.com/@GhewareDevOpsAI)
+- [BrainUpgrade](https://brainupgrade.in)
